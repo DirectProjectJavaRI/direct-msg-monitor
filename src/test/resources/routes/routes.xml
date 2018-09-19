@@ -1,0 +1,30 @@
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="direct-reliable">
+
+      <from uri="direct:start"/>
+      <aggregate strategyRef="aggregationStrategy" ignoreInvalidCorrelationKeys="true"
+           aggregationRepositoryRef="directMonitoringRepo">
+        <correlationExpression>
+            <ref>msgIdCorrelator</ref>
+        </correlationExpression>
+        <completionPredicate>
+          <method bean="aggregationStrategy" method="isAggregationComplete"/>
+        </completionPredicate>     
+        <completionTimeout>
+          <method bean="aggregationStrategy" method="getAggregationTime"/>
+        </completionTimeout>           
+        <to uri="mock:result"/>
+      </aggregate>
+    </route>
+    
+    <!--  Simple timer to purge exchanges in the duplication data base.
+          This can replaced more sophisticated quartz configuration using 
+          the Camel Quartz component and cron expressions.  Default configuration
+          purges the table once every 6 hours.
+     -->    
+     <route id="duplicate-store-purge">
+       <from uri="timer://purgeTimer?period=6h"/>
+       <bean ref="duplicationStateManager" method="purge"/>
+     </route>
+
+</routes> 

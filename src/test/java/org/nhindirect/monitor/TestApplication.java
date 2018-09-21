@@ -29,7 +29,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"org.nhindirect.monitor"})	
+@ComponentScan( basePackages= {"org.nhindirect.monitor.boot", "org.nhindirect.monitor.dao",
+	"org.nhindirect.monitor.resources", "org.nhindirect.monitor.streams"})
 public class TestApplication
 {
 	

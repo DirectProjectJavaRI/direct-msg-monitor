@@ -12,20 +12,22 @@ import org.junit.runner.RunWith;
 import org.nhindirect.common.mail.MDNStandard;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
-import org.nhindirect.monitor.JPATestConfiguration;
+import org.nhindirect.monitor.TestApplication;
 import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 @RunWith(CamelSpringBootRunner.class)
 @DataJpaTest
 @Transactional
-@ContextConfiguration(classes=JPATestConfiguration.class)
+@ContextConfiguration(classes=TestApplication.class)
 @DirtiesContext
+@ActiveProfiles("producerMock")
 public class TestFilterNonCompletedExchangesMonitorRoute extends CamelSpringTestSupport 
 {
 	static

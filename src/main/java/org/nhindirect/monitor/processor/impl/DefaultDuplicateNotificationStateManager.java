@@ -23,21 +23,18 @@ package org.nhindirect.monitor.processor.impl;
 
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.nhindirect.common.mail.MDNStandard;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxDetail;
 import org.nhindirect.common.tx.model.TxDetailType;
 import org.nhindirect.common.tx.model.TxMessageType;
-import org.nhindirect.monitor.dao.NotificationDAOException;
-import org.nhindirect.monitor.dao.NotificationDuplicationDAO;
 import org.nhindirect.monitor.processor.DuplicateNotificationStateManager;
 import org.nhindirect.monitor.processor.DuplicateNotificationStateManagerException;
+import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
+import org.nhindirect.monitor.repository.RepositoryBiz;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -50,14 +47,11 @@ public class DefaultDuplicateNotificationStateManager implements DuplicateNotifi
 {
 	protected static final int DEFAULT_RETENTION_TIME = 7;
 	
-	@SuppressWarnings("deprecation")
-	private static final Log LOGGER = LogFactory.getFactory().getInstance(DefaultDuplicateNotificationStateManager.class);
-	
 	@Value("${monitor.dupStateDAO.retensionTime:7}")
 	protected int messageRetention;
 	
 	@Autowired
-	protected NotificationDuplicationDAO dao;
+	protected ReceivedNotificationRepository recRepo;
 	
 	/**
 	 * Constructor
@@ -77,12 +71,12 @@ public class DefaultDuplicateNotificationStateManager implements DuplicateNotifi
 	}
 	
 	/**
-	 * Sets the dao that will store the message state.
-	 * @param dao The dao that will store the message state.
+	 * Sets the repository that will store the message state.
+	 * @param recRepo The repository that will store the message state.
 	 */
-	public void setDao(NotificationDuplicationDAO dao)
+	public void setReceivedNotificationRepository(ReceivedNotificationRepository recRepo)
 	{
-		this.dao = dao;
+		this.recRepo = recRepo;
 	}
 
 	
@@ -92,8 +86,8 @@ public class DefaultDuplicateNotificationStateManager implements DuplicateNotifi
 	@Override
 	public void addNotification(Tx notificationMessage) throws DuplicateNotificationStateManagerException
 	{
-		if (dao == null)
-			throw new IllegalArgumentException("Dao cannot be null");	
+		if (recRepo == null)
+			throw new IllegalArgumentException("Repository cannot be null");	
 		
 		if (notificationMessage == null)
 			throw new IllegalArgumentException("Notification message cannot be null");
@@ -105,19 +99,15 @@ public class DefaultDuplicateNotificationStateManager implements DuplicateNotifi
 			final TxDetail originalMessageIdDetail = notificationMessage.getDetail(TxDetailType.PARENT_MSG_ID);
 			final TxDetail origRecips = notificationMessage.getDetail(TxDetailType.FINAL_RECIPIENTS);
 			
-			if (originalMessageIdDetail != null && origRecips != null)
+			try
 			{
-				for (String recipAddress : origRecips.getDetailValue().split(","))
-				{
-					try
-					{
-						dao.addNotification(originalMessageIdDetail.getDetailValue(), recipAddress);
-					}
-					catch (NotificationDAOException e)
-					{
-						throw new DuplicateNotificationStateManagerException(e);
-					}
-				}
+				if (originalMessageIdDetail != null && origRecips != null)
+					for (String recipAddress : origRecips.getDetailValue().split(","))
+							RepositoryBiz.addMessageToDuplicateStore(originalMessageIdDetail.getDetailValue(), recipAddress, recRepo);
+			}
+			catch (Exception e)
+			{
+				throw new DuplicateNotificationStateManagerException(e);
 			}
 		}
 	}
@@ -130,7 +120,7 @@ public class DefaultDuplicateNotificationStateManager implements DuplicateNotifi
 	{
 		boolean retVal = false;
 		
-		if (dao == null)
+		if (recRepo == null)
 			throw new IllegalArgumentException("Dao cannot be null");	
 		
 		if (notificationMessage == null)
@@ -152,18 +142,21 @@ public class DefaultDuplicateNotificationStateManager implements DuplicateNotifi
 			
 			if (originalMessageIdDetail != null && origRecips != null)
 			{
-				Collection<String> recips = Arrays.asList(origRecips.getDetailValue().split(","));
+				List<String> recips = Arrays.asList(origRecips.getDetailValue().split(","));
+
 				try
 				{
-					final Set<String> alreadyReceivedNotifs = dao.getReceivedAddresses(originalMessageIdDetail.getDetailValue(), recips);
+					recips.replaceAll(String::toUpperCase);
+					
+					final List<String> alreadyReceivedNotifs = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase(originalMessageIdDetail.getDetailValue().toUpperCase(), 
+							recips);
 					if (!alreadyReceivedNotifs.isEmpty())
-						retVal = true;
+						retVal = true;	
 				}
-				catch (NotificationDAOException e)
+				catch (Exception e)
 				{
 					throw new DuplicateNotificationStateManagerException(e);
 				}
-				
 			}
 		}
 		
@@ -176,18 +169,12 @@ public class DefaultDuplicateNotificationStateManager implements DuplicateNotifi
 	@Override
 	public void purge()
 	{
-		if (dao == null)
+		if (recRepo == null)
 			throw new IllegalArgumentException("Dao cannot be null");	
 		
-		try
-		{
-			final Calendar cal = Calendar.getInstance(Locale.getDefault());
-			cal.add(Calendar.HOUR, -(24 * messageRetention));
-			dao.purgeNotifications(cal);
-		}
-		catch (NotificationDAOException e)
-		{
-			LOGGER.warn("Message duplication state purge failed.", e);
-		}
+		final Calendar cal = Calendar.getInstance(Locale.getDefault());
+		cal.add(Calendar.HOUR, -(24 * messageRetention));
+		recRepo.deleteByReceivedTimeBefore(cal);
+
 	}
 }

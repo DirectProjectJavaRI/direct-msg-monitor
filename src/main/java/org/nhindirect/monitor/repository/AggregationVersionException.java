@@ -1,12 +1,10 @@
 /* 
 Copyright (c) 2010, NHIN Direct Project
 All rights reserved.
-
 Authors:
    Greg Meyer      gm2552@cerner.com
  
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
 Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer 
 in the documentation and/or other materials provided with the distribution.  Neither the name of the The NHIN Direct Project (nhindirect.org). 
@@ -19,47 +17,48 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.nhindirect.monitor.dao;
+package org.nhindirect.monitor.repository;
 
 /**
- * Exception in notification dao operations.
+ * Exception in {@link AggregationDAO} operations when the version numbers of aggregation exchanges do not match.  Generally indicates a 
+ * concurrency/consistency conflict and that the aggregation process should be performed again.
  * @author Greg Meyer
- * @since 1.0
+ * @since 1.1
  */
-public class NotificationDAOException extends Exception
+public class AggregationVersionException extends AggregationRepositoryException
 {
+	   static final long serialVersionUID = -2334572304379436141L;
 	
-	static final long serialVersionUID = -6628429229336524475L;
-   /////CLOVER:OFF
-	/**
-	 * {@inheritDoc}
-	 */
-    public NotificationDAOException() 
-    {
-    }
+	   /////CLOVER:OFF
+		/**
+		 * {@inheritDoc}
+		 */
+	    public AggregationVersionException() 
+	    {
+	    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-    public NotificationDAOException(String msg) 
-    {
-        super(msg);
-    }
+		/**
+		 * {@inheritDoc}
+		 */
+	    public AggregationVersionException(String msg) 
+	    {
+	        super(msg);
+	    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-    public NotificationDAOException(String msg, Throwable t) 
-    {
-        super(msg, t);
-    }
+		/**
+		 * {@inheritDoc}
+		 */
+	    public AggregationVersionException(String msg, Throwable t) 
+	    {
+	        super(msg, t);
+	    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-    public NotificationDAOException(Throwable t) 
-    {
-        super(t);
-    }
-    /////CLOVER:ON
+		/**
+		 * {@inheritDoc}
+		 */
+	    public AggregationVersionException(Throwable t) 
+	    {
+	        super(t);
+	    }
+	    /////CLOVER:ON
 }

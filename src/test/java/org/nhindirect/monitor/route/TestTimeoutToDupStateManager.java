@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.mail.internet.MimeMessage;
@@ -22,20 +21,20 @@ import org.junit.Test;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
 import org.nhindirect.monitor.SpringBaseTest;
-import org.nhindirect.monitor.dao.NotificationDuplicationDAO;
+import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
 import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(locations = "classpath:testTimeoutToDupStateManager.properties", properties = {"monitor.condition.generalConditionTimeout=1000", 
-  "monitor.condition.reliableConditionTimeout=1000"})
+@TestPropertySource(locations = "classpath:testTimeoutToDupStateManager.properties", properties = {"direct.msgmonitor.condition.generalConditionTimeout=1000", 
+  "direct.msgmonitor.condition.reliableConditionTimeout=1000"})
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class TestTimeoutToDupStateManager extends SpringBaseTest 
 {
 	@Autowired
-	private NotificationDuplicationDAO dao;
+	private ReceivedNotificationRepository recRepo;
 	
 	@Autowired
 	protected CamelContext context;
@@ -43,19 +42,19 @@ public class TestTimeoutToDupStateManager extends SpringBaseTest
 	@EndpointInject(uri = "direct:start")
 	protected ProducerTemplate template;
 	
-	public void purgeNotifDAO(NotificationDuplicationDAO dao) throws Exception
+	public void purgeNotifDAO(ReceivedNotificationRepository recRepo) throws Exception
 	{
-		final Calendar qualTime = Calendar.getInstance(Locale.getDefault());
+		Calendar qualTime = Calendar.getInstance(Locale.getDefault());
 		qualTime.add(Calendar.YEAR, 10);
 		
-		dao.purgeNotifications(qualTime);
+		recRepo.deleteByReceivedTimeBefore(qualTime);
 	}
 	
 	@Test
 	public void testTimeoutReliableMessage_conditionNotComplete_assertDupAdded() throws Exception
 	{
-		assertNotNull(dao);
-		purgeNotifDAO(dao);
+		assertNotNull(recRepo);
+		purgeNotifDAO(recRepo);
 		
 		MockEndpoint mock = context.getEndpoint("mock:result", MockEndpoint.class);
 
@@ -84,11 +83,15 @@ public class TestTimeoutToDupStateManager extends SpringBaseTest
 		
 		assertEquals("timeout", exchange.getProperty(Exchange.AGGREGATED_COMPLETED_BY));
 		
-		Set<String> addresses = dao.getReceivedAddresses(originalMessageId + "\t" + message.getMessageID(), Arrays.asList("gm2552@direct.securehealthemail.com"));
+		final String msgId = originalMessageId + "\t" + message.getMessageID();
+		
+		List<String> addresses = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase(msgId.toUpperCase(), 
+				Arrays.asList("gm2552@direct.securehealthemail.com".toUpperCase()));
 		assertEquals(1, addresses.size());
 		assertTrue(addresses.contains("gm2552@direct.securehealthemail.com"));
 		
-		addresses = dao.getReceivedAddresses(originalMessageId, Arrays.asList("gm2552@direct.securehealthemail.com"));
+		addresses = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase(originalMessageId.toUpperCase(), 
+				Arrays.asList("gm2552@direct.securehealthemail.com".toUpperCase()));
 		assertEquals(1, addresses.size());
 		assertTrue(addresses.contains("gm2552@direct.securehealthemail.com"));		
 	}	
@@ -96,8 +99,8 @@ public class TestTimeoutToDupStateManager extends SpringBaseTest
 	@Test
 	public void testTimeoutReliableMessage_conditionNotComplete_msgNotReliable_assertDupNotAdded() throws Exception
 	{
-		assertNotNull(dao);
-		purgeNotifDAO(dao);
+		assertNotNull(recRepo);
+		purgeNotifDAO(recRepo);
 		
 		MockEndpoint mock = context.getEndpoint("mock:result", MockEndpoint.class);
 
@@ -125,7 +128,8 @@ public class TestTimeoutToDupStateManager extends SpringBaseTest
 		
 		assertEquals("timeout", exchange.getProperty(Exchange.AGGREGATED_COMPLETED_BY));
 		
-		Set<String> addresses = dao.getReceivedAddresses(originalMessageId, Arrays.asList("gm2552@direct.securehealthemail.com"));
+		List<String> addresses = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase(originalMessageId.toUpperCase(), 
+				Arrays.asList("gm2552@direct.securehealthemail.com".toUpperCase()));
 		assertEquals(0, addresses.size());
 	}	
 	

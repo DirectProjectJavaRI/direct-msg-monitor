@@ -1,8 +1,8 @@
 package org.nhindirect.monitor.springconfig;
 
-import org.nhindirect.monitor.dao.NotificationDuplicationDAO;
 import org.nhindirect.monitor.processor.impl.DefaultDuplicateNotificationStateManager;
 import org.nhindirect.monitor.processor.impl.TimeoutDupStateManager;
+import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class ProcessorConfig
 {		
 	@Autowired
-	protected NotificationDuplicationDAO notificationDao;
+	protected ReceivedNotificationRepository recRepo;
 	
 	@Value("${direct.msgmonitor.dupStateDAO.retensionTime:7}")	
 	private String messageRetention;
@@ -28,7 +28,7 @@ public class ProcessorConfig
 	{
 		final TimeoutDupStateManager retVal = new TimeoutDupStateManager();
 		
-		retVal.setDao(notificationDao);
+		retVal.setReceivedNotificationRepository(recRepo);
 		retVal.setMessageRetention(Integer.parseInt(messageRetention));
 				
 		return retVal;

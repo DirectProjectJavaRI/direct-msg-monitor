@@ -12,8 +12,9 @@
        http://camel.apache.org/schema/spring 
        http://camel.apache.org/schema/spring/camel-spring.xsd"       
        default-autowire="byName">
-       
+
   <import resource="classpath*:distributedAggregatorRoutes/routeComponents.xml"/>
+  <context:property-placeholder location="classpath:properties/shorttimeout.properties" />
 
   <camelContext xmlns="http://camel.apache.org/schema/spring">  
     

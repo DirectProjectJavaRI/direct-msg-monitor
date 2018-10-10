@@ -7,7 +7,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 import java.util.Calendar;
-import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 
 import org.apache.camel.test.spring.CamelSpringBootRunner;
@@ -17,27 +17,28 @@ import org.junit.runner.RunWith;
 import org.nhindirect.common.mail.MDNStandard;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
-import org.nhindirect.monitor.JPATestConfiguration;
-import org.nhindirect.monitor.dao.NotificationDAOException;
-import org.nhindirect.monitor.dao.NotificationDuplicationDAO;
+import org.nhindirect.monitor.TestApplication;
 import org.nhindirect.monitor.processor.DuplicateNotificationStateManagerException;
+import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
 import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 @RunWith(CamelSpringBootRunner.class)
 @DataJpaTest
 @Transactional
-@ContextConfiguration(classes=JPATestConfiguration.class)
+@ContextConfiguration(classes=TestApplication.class)
 @DirtiesContext
+@ActiveProfiles("producerMock")
 public class DefaultDuplicateNotificationStateManager_suppressNotificationTest 
 {
 
 	@Autowired
-	private NotificationDuplicationDAO notifDao;
+	private ReceivedNotificationRepository recRepo;
 	
 	@Before
 	public void setUp() throws Exception
@@ -45,7 +46,7 @@ public class DefaultDuplicateNotificationStateManager_suppressNotificationTest
 		Calendar qualTime = Calendar.getInstance(Locale.getDefault());
 		qualTime.add(Calendar.YEAR, 10);
 		
-		notifDao.purgeNotifications(qualTime);
+		recRepo.deleteByReceivedTimeBefore(qualTime);
 	}
 	
 	@Test
@@ -70,7 +71,7 @@ public class DefaultDuplicateNotificationStateManager_suppressNotificationTest
 	public void testSuppressNotification_nullTx_assertException() throws Exception
 	{
 		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		boolean execptionOccured = false;
 		
@@ -90,7 +91,7 @@ public class DefaultDuplicateNotificationStateManager_suppressNotificationTest
 	public void testSuppressNotification_nonNotificationTx_assertFalse() throws Exception
 	{
 		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "1234", "", "", "", "gm2552@cerner.com");
 
@@ -101,7 +102,7 @@ public class DefaultDuplicateNotificationStateManager_suppressNotificationTest
 	public void testSuppressNotification_displayedDisposition_assertFalse() throws Exception
 	{
 		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		Tx tx = TestUtils.makeMessage(TxMessageType.MDN, "1234", "5678", "", "",
 				"", "", MDNStandard.Disposition_Displayed);
@@ -113,7 +114,7 @@ public class DefaultDuplicateNotificationStateManager_suppressNotificationTest
 	public void testSuppressNotification_noOrigMessageId_assertFalse() throws Exception
 	{
 		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		Tx tx = TestUtils.makeMessage(TxMessageType.MDN, "1234", "", "", "",
 				"gm2552@cerner.com", "", MDNStandard.Disposition_Error);
@@ -125,7 +126,7 @@ public class DefaultDuplicateNotificationStateManager_suppressNotificationTest
 	public void testSuppressNotification_noFinalRecip_assertFalse() throws Exception
 	{
 		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		Tx tx = TestUtils.makeMessage(TxMessageType.MDN, "1234", "5678", "", "",
 				"", "", MDNStandard.Disposition_Error);
@@ -137,7 +138,7 @@ public class DefaultDuplicateNotificationStateManager_suppressNotificationTest
 	public void testSuppressNotification_recipNotInStore_assertFalse() throws Exception
 	{
 		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		Tx tx = TestUtils.makeMessage(TxMessageType.MDN, "1234", "5678", "", "",
 				"gm2552@cerner.com", "", MDNStandard.Disposition_Error);
@@ -149,7 +150,7 @@ public class DefaultDuplicateNotificationStateManager_suppressNotificationTest
 	public void testSuppressNotification_recipInStore_assertTrue() throws Exception
 	{
 		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		Tx tx = TestUtils.makeMessage(TxMessageType.MDN, "1234", "5678", "", "",
 				"gm2552@cerner.com", "", MDNStandard.Disposition_Error);
@@ -166,9 +167,9 @@ public class DefaultDuplicateNotificationStateManager_suppressNotificationTest
 		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
 		boolean execptionOccured = false;
 		
-		NotificationDuplicationDAO spyDao = mock(NotificationDuplicationDAO.class);
-		doThrow(new NotificationDAOException("")).when(spyDao).getReceivedAddresses((String)any(), (Collection<String>)any());
-		mgr.setDao(spyDao);
+		ReceivedNotificationRepository spyDao = mock(ReceivedNotificationRepository.class);
+		doThrow(new RuntimeException("")).when(spyDao).findByMessageidIgnoreCaseAndAddressInIgnoreCase((String)any(), (List<String>)any());
+		mgr.setReceivedNotificationRepository(spyDao);
 		
 		try
 		{

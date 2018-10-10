@@ -10,7 +10,8 @@ import java.util.Arrays;
 
 import org.junit.Test;
 import org.nhindirect.monitor.aggregator.repository.ConcurrentJPAAggregationRepository;
-import org.nhindirect.monitor.dao.AggregationDAO;
+import org.nhindirect.monitor.repository.AggregationCompletedRepository;
+import org.nhindirect.monitor.repository.AggregationRepository;
 
 
 public class ConcurrentJPAAggregationRepository_doStartTest 
@@ -18,11 +19,12 @@ public class ConcurrentJPAAggregationRepository_doStartTest
 	@Test
 	public void testDoStart_emptyAggregation_assertNoException() throws Exception
 	{
-		AggregationDAO dao = mock(AggregationDAO.class);
-		when(dao.getAggregationKeys()).thenReturn(new ArrayList<String>());
-		when(dao.getAggregationCompletedKeys()).thenReturn(new ArrayList<String>());
+		AggregationRepository aggRepo = mock(AggregationRepository.class);
+		AggregationCompletedRepository aggCompRepo = mock(AggregationCompletedRepository.class);
+		when(aggRepo.findAllKeys()).thenReturn(new ArrayList<String>());
+		when(aggCompRepo.findAllKeys()).thenReturn(new ArrayList<String>());
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(dao);
+		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
 		repo.doStart();
 		repo.doStop();
 	}
@@ -30,11 +32,12 @@ public class ConcurrentJPAAggregationRepository_doStartTest
 	@Test
 	public void testDoStart_nonEmptyAggregation_assertNoException() throws Exception
 	{
-		AggregationDAO dao = mock(AggregationDAO.class);
-		when(dao.getAggregationKeys()).thenReturn(Arrays.asList("12345"));
-		when(dao.getAggregationCompletedKeys()).thenReturn(Arrays.asList("12345"));
+		AggregationRepository aggRepo = mock(AggregationRepository.class);
+		AggregationCompletedRepository aggCompRepo = mock(AggregationCompletedRepository.class);
+		when(aggRepo.findAllKeys()).thenReturn(Arrays.asList("12345"));
+		when(aggCompRepo.findAllKeys()).thenReturn(Arrays.asList("12345"));
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(dao);
+		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
 		repo.doStart();
 		repo.doStop();
 	}

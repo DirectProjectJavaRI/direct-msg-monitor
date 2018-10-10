@@ -18,6 +18,7 @@ import org.nhindirect.monitor.BaseTestPlan;
 import org.nhindirect.monitor.SpringBaseTest;
 import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,9 @@ public class TxsResource_addTxWebTest extends SpringBaseTest
 	@Autowired
 	protected CamelContext context;
 	
+	@Autowired
+	protected ApplicationContext ctx;
+	
 	abstract class TestPlan extends BaseTestPlan 
 	{
 		protected MockEndpoint mockEndpoint = null;
@@ -38,7 +42,6 @@ public class TxsResource_addTxWebTest extends SpringBaseTest
 		{
 			try
 			{
-								
 				mockEndpoint = context.getEndpoint("mock:result", MockEndpoint.class);
 			}
 			catch (Throwable t)

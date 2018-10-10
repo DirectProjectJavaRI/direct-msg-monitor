@@ -16,15 +16,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
-import org.nhindirect.monitor.JPATestConfiguration;
+import org.nhindirect.monitor.TestApplication;
 import org.nhindirect.monitor.aggregator.repository.ConcurrentJPAAggregationRepository;
-import org.nhindirect.monitor.dao.AggregationDAO;
+import org.nhindirect.monitor.repository.AggregationCompletedRepository;
+import org.nhindirect.monitor.repository.AggregationRepository;
 import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,31 +34,36 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(CamelSpringBootRunner.class)
 @DataJpaTest
 @Transactional
-@ContextConfiguration(classes=JPATestConfiguration.class)
+@ContextConfiguration(classes=TestApplication.class)
 @DirtiesContext
+@ActiveProfiles("producerMock")
 public class ConcurrentJPAAggregationRepository_getKeysTest extends CamelSpringTestSupport 
 {
 	@Autowired
-	private AggregationDAO notifDao;
+	private AggregationRepository aggRepo;
+	
+	@Autowired
+	private AggregationCompletedRepository aggCompRepo;
 	
 	@Before
 	public void setUp() throws Exception
 	{
 		super.setUp();
 		
-		notifDao.purgeAll();
+		aggRepo.deleteAll();
+		aggCompRepo.deleteAll();
 		
-		List<String> keys = notifDao.getAggregationKeys();
+		List<String> keys = aggRepo.findAllKeys();
 		assertEquals(0, keys.size());
 		
-		keys = notifDao.getAggregationCompletedKeys();
+		keys = aggCompRepo.findAllKeys();
 		assertEquals(0, keys.size());
 	}
 	
 	@Test
 	public void testGetKeys_emptyRepository_assertEmptyList()
 	{
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(notifDao);
+		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
 		
 		final Set<String> keys = repo.getKeys();
 		
@@ -66,7 +73,7 @@ public class ConcurrentJPAAggregationRepository_getKeysTest extends CamelSpringT
 	@Test
 	public void testGetKeys_singleEntry_assertSingleKey()
 	{
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(notifDao);
+		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
 	
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Exchange exchange = new DefaultExchange(context);
@@ -83,7 +90,7 @@ public class ConcurrentJPAAggregationRepository_getKeysTest extends CamelSpringT
 	@Test
 	public void testGetKeys_multipleEntries_assertMultipleKeys()
 	{
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(notifDao);
+		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
 	
 		final Tx tx1 = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Exchange exchange1 = new DefaultExchange(context);
@@ -109,10 +116,10 @@ public class ConcurrentJPAAggregationRepository_getKeysTest extends CamelSpringT
 	@Test
 	public void testGetKeys_daoException_assertException() throws Exception
 	{
-		AggregationDAO dao = mock(AggregationDAO.class);
-		doThrow(new RuntimeException()).when(dao).getAggregationKeys();
+		AggregationRepository dao = mock(AggregationRepository.class);
+		doThrow(new RuntimeException()).when(dao).findAllKeys();
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(dao);
+		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(dao, aggCompRepo, 120);
 		
 		boolean exceptionOccured = false;
 		try

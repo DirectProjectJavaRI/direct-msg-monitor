@@ -15,11 +15,12 @@ import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.nhindirect.monitor.JPATestConfiguration;
-import org.nhindirect.monitor.dao.NotificationDAOException;
-import org.nhindirect.monitor.dao.NotificationDuplicationDAO;
+import org.nhindirect.monitor.TestApplication;
+import org.nhindirect.monitor.entity.ReceivedNotification;
+import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,11 +29,12 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringRunner.class)
 @DataJpaTest
 @Transactional
-@ContextConfiguration(classes=JPATestConfiguration.class)
+@ContextConfiguration(classes=TestApplication.class)
+@ActiveProfiles("producerMock")
 public class DefaultDuplicateNotificationStateManager_purgeTest 
 {
 	@Autowired
-	private NotificationDuplicationDAO notifDao;
+	private ReceivedNotificationRepository recRepo;
 	
 	@Before
 	public void setUp() throws Exception
@@ -40,7 +42,7 @@ public class DefaultDuplicateNotificationStateManager_purgeTest
 		Calendar qualTime = Calendar.getInstance(Locale.getDefault());
 		qualTime.add(Calendar.YEAR, 10);
 		
-		notifDao.purgeNotifications(qualTime);
+		recRepo.deleteByReceivedTimeBefore(qualTime);
 	}
 	
 	@Test
@@ -65,21 +67,27 @@ public class DefaultDuplicateNotificationStateManager_purgeTest
 	public void testPurgeNotification_notificationNotYetPurgable_assertNotPurged() throws Exception
 	{
 		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		// set one day ago.... messages are all new, so should not be purgable
 		mgr.setMessageRetention(1);
 		
 		final String messageId = UUID.randomUUID().toString();
 		
-		notifDao.addNotification(messageId, "gm2552@cerner.com");
+		ReceivedNotification notif = new ReceivedNotification();
+		notif.setAddress("gm2552@cerner.com");
+		notif.setMessageid(messageId);
+		notif.setReceivedTime(Calendar.getInstance(Locale.getDefault()));
 		
-		Collection<String> addresses = notifDao.getReceivedAddresses(messageId, Arrays.asList("gm2552@cerner.com"));
+		
+		recRepo.save(notif);
+		
+		Collection<String> addresses = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase(messageId.toUpperCase(), Arrays.asList("gm2552@cerner.com".toUpperCase()));
 		
 		assertEquals(1, addresses.size());
 		
 		mgr.purge();
 		
-		addresses = notifDao.getReceivedAddresses(messageId, Arrays.asList("gm2552@cerner.com"));
+		addresses = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase(messageId.toUpperCase(), Arrays.asList("gm2552@cerner.com".toUpperCase()));
 		
 		assertEquals(1, addresses.size());	
 	}
@@ -88,33 +96,39 @@ public class DefaultDuplicateNotificationStateManager_purgeTest
 	public void testPurgeNotification_notificationnotificationPurged_assertNotPurged() throws Exception
 	{
 		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		// set the purge time to tomorrow so every thing today will get purged
 		mgr.setMessageRetention(-1);
 		
 		final String messageId = UUID.randomUUID().toString();
 		
-		notifDao.addNotification(messageId, "gm2552@cerner.com");
+		ReceivedNotification notif = new ReceivedNotification();
+		notif.setAddress("gm2552@cerner.com");
+		notif.setMessageid(messageId);
+		notif.setReceivedTime(Calendar.getInstance(Locale.getDefault()));
 		
-		Collection<String> addresses = notifDao.getReceivedAddresses(messageId, Arrays.asList("gm2552@cerner.com"));
+		
+		recRepo.save(notif);
+		
+		Collection<String> addresses = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase(messageId.toUpperCase(), Arrays.asList("gm2552@cerner.com".toUpperCase()));
 		
 		assertEquals(1, addresses.size());
 		
 		mgr.purge();
 		
-		addresses = notifDao.getReceivedAddresses(messageId, Arrays.asList("gm2552@cerner.com"));
+		addresses = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase(messageId.toUpperCase(), Arrays.asList("gm2552@cerner.com".toUpperCase()));
 		
 		assertEquals(0, addresses.size());	
 	}	
 	
-	@Test
+	@Test(expected=RuntimeException.class)
 	public void testPurgeNotification_daoError_assertException() throws Exception
 	{
 		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
 		
-		NotificationDuplicationDAO spyDao = mock(NotificationDuplicationDAO.class);
-		doThrow(new NotificationDAOException("")).when(spyDao).purgeNotifications((Calendar)any());
-		mgr.setDao(spyDao);
+		ReceivedNotificationRepository spyDao = mock(ReceivedNotificationRepository.class);
+		doThrow(new RuntimeException("")).when(spyDao).deleteByReceivedTimeBefore((Calendar)any());
+		mgr.setReceivedNotificationRepository(spyDao);
 		
 		mgr.purge();
 		

@@ -27,15 +27,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.nhindirect.common.mail.MDNStandard;
 import org.nhindirect.common.mail.dsn.DSNStandard;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxDetail;
 import org.nhindirect.common.tx.model.TxDetailType;
-import org.nhindirect.monitor.dao.NotificationDAOException;
-import org.nhindirect.monitor.dao.NotificationDuplicationDAO;
+import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
+import org.nhindirect.monitor.repository.RepositoryBiz;
 
 
 /**
@@ -44,16 +42,12 @@ import org.nhindirect.monitor.dao.NotificationDuplicationDAO;
  * @since 1.0
  */
 public class TimelyAndReliableCompletionCondition extends AbstractCompletionCondition
-{
+{	
+	protected ReceivedNotificationRepository recRepo;
 	
-	@SuppressWarnings("deprecation")
-	private static final Log LOGGER = LogFactory.getFactory().getInstance(TimelyAndReliableCompletionCondition.class);
-	
-	protected NotificationDuplicationDAO dao;
-	
-	public void setDupDAO(NotificationDuplicationDAO dao)
+	public void setReceivedNotificationRepository(ReceivedNotificationRepository recRepo)
 	{
-		this.dao = dao;
+		this.recRepo = recRepo;
 	}
 	
 	/**
@@ -158,27 +152,14 @@ public class TimelyAndReliableCompletionCondition extends AbstractCompletionCond
 			{
 				TxDetail detail = originalMessage.getDetail(TxDetailType.MSG_ID);
 				if (detail != null)
-					addMessageToDuplicateStore(detail.getDetailValue(), status.getRecipient());
+					RepositoryBiz.addMessageToDuplicateStore(detail.getDetailValue(), status.getRecipient(), recRepo);
 			}
 		}
 		
 		return retVal;
 	}
 	
-	protected void addMessageToDuplicateStore(String messageId, String address)
-	{
-		if (dao != null)
-		{
-			try
-			{
-				dao.addNotification(messageId, address);
-			}
-			catch (NotificationDAOException e)
-			{
-				LOGGER.warn("Could not add transaction to duplication state manager.", e);
-			}
-		}
-	}
+
 	
 	private static class RecipientResponseStatus
 	{

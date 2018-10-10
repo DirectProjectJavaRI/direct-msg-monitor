@@ -52,6 +52,15 @@ public class TxEventSink
     @Autowired
 	protected ProducerTemplate template;
     
+	/**
+	 * Sets the producer template.
+	 * @param template The producer template.
+	 */
+	public void setProducerTemplate(ProducerTemplate template)
+	{
+		this.template = template;
+	}
+    
 	@StreamListener(target = TxInput.TX_INPUT)
 	public void addTx(String txMarshalled) throws ClassNotFoundException, JsonParseException, JsonMappingException, IOException 
 	{

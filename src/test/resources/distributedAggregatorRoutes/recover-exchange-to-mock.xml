@@ -14,23 +14,15 @@
        default-autowire="byName">
        
   <import resource="classpath*:distributedAggregatorRoutes/routeComponents.xml"/>
+  <context:property-placeholder location="classpath:properties/recoveryMonitor.properties" />
 
-  <bean id="shortRecoveryIntervalAggregationDAO" class="org.nhindirect.monitor.dao.impl.AggregationDAOImpl">
-  	 <property name="recoveryLockInterval" value="10" />
-  </bean>
-
-  <bean id="monitoringRepo" class="org.nhindirect.monitor.aggregator.repository.ConcurrentJPAAggregationRepository">
-      <!-- store the repo in the hawtdb.dat file -->
-      <property name="aggreationDAO" ref="shortRecoveryIntervalAggregationDAO"/>
-      <!-- and use directMonitoring as the repository name -->   
-  </bean>
 
   <camelContext xmlns="http://camel.apache.org/schema/spring">  
     
     <route id="direct-reliable">
       <from uri="direct:start"/>
       <aggregate strategyRef="aggregationStrategy" ignoreInvalidCorrelationKeys="true"
-           aggregationRepositoryRef="monitoringRepo">
+           aggregationRepositoryRef="directMonitoringRepo">
         <correlationExpression>
             <ref>msgIdCorrelator</ref>
         </correlationExpression>

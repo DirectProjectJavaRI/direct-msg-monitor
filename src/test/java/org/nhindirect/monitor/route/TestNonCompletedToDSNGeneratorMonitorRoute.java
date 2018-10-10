@@ -8,28 +8,17 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.spring.CamelSpringBootRunner;
 import org.apache.camel.test.spring.CamelSpringTestSupport;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.nhindirect.common.mail.MDNStandard;
 import org.nhindirect.common.mail.dsn.DSNStandard;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
-import org.nhindirect.monitor.JPATestConfiguration;
 import org.nhindirect.monitor.util.TestUtils;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Transactional;
 
-@RunWith(CamelSpringBootRunner.class)
-@DataJpaTest
-@Transactional
-@ContextConfiguration(classes=JPATestConfiguration.class)
-@DirtiesContext
+
 public class TestNonCompletedToDSNGeneratorMonitorRoute extends CamelSpringTestSupport 
 {
 	@Test

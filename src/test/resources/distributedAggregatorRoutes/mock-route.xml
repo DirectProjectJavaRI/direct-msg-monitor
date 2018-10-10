@@ -13,6 +13,8 @@
        http://camel.apache.org/schema/spring/camel-spring.xsd"       
        default-autowire="byName">
 
+  <import resource="classpath*:distributedAggregatorRoutes/routeComponents.xml"/>
+
   <camelContext xmlns="http://camel.apache.org/schema/spring">  
     
     <route id="direct-mock">

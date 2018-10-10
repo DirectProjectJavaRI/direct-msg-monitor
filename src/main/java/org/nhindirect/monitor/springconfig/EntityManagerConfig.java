@@ -28,7 +28,7 @@ public class EntityManagerConfig
 			 entityManagerFactory.setPersistenceUnitName("direct-msg-monitor-store");
 			 entityManagerFactory.setJpaVendorAdapter(jpaAdaptor);
 			 
-			 entityManagerFactory.setPackagesToScan(ClassUtils.getPackageName(org.nhindirect.monitor.dao.entity.Aggregation.class));
+			 entityManagerFactory.setPackagesToScan(ClassUtils.getPackageName(org.nhindirect.monitor.entity.Aggregation.class));
 
 			 return entityManagerFactory;		
 		  }

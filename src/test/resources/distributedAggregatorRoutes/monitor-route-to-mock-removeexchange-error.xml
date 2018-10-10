@@ -15,24 +15,17 @@
 
   <import resource="classpath*:distributedAggregatorRoutes/routeComponents.xml"/>
 
-  <bean id="errorGenAggregationDAO" class="org.nhindirect.monitor.dao.impl.RemovedExceptionAggregationDAOImpl" />
-
-  <bean id="monitoringRepo" class="org.nhindirect.monitor.aggregator.repository.ConcurrentJPAAggregationRepository">
-      <!-- store the repo in the hawtdb.dat file -->
-      <property name="aggreationDAO" ref="errorGenAggregationDAO"/>
-      <!-- and use directMonitoring as the repository name -->   
-  </bean>
-
   <camelContext xmlns="http://camel.apache.org/schema/spring">  
+    
     
     <route id="direct-reliable">
       <from uri="direct:start"/>
       <onException>
-           <exception>org.nhindirect.monitor.dao.AggregationVersionException</exception>
+           <exception>org.nhindirect.monitor.repository.AggregationVersionException</exception>
            <redeliveryPolicy maximumRedeliveries="-1" redeliveryDelay="200" collisionAvoidanceFactor="0.15"/>
       </onException>      
       <aggregate strategyRef="aggregationStrategy" ignoreInvalidCorrelationKeys="true"
-           aggregationRepositoryRef="monitoringRepo">
+           aggregationRepositoryRef="directMonitoringRepo">
         <correlationExpression>
             <ref>msgIdCorrelator</ref>
         </correlationExpression>

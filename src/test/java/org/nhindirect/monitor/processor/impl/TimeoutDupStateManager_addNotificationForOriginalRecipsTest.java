@@ -11,19 +11,20 @@ import static org.mockito.Matchers.any;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
-import java.util.Set;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
-import org.nhindirect.monitor.JPATestConfiguration;
-import org.nhindirect.monitor.dao.NotificationDuplicationDAO;
+import org.nhindirect.monitor.TestApplication;
+import org.nhindirect.monitor.entity.ReceivedNotification;
+import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
 import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,19 +32,20 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringRunner.class)
 @DataJpaTest
 @Transactional
-@ContextConfiguration(classes=JPATestConfiguration.class)
+@ContextConfiguration(classes=TestApplication.class)
+@ActiveProfiles("producerMock")
 public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest 
 {
 	@Autowired
-	private NotificationDuplicationDAO notifDao;
+	private ReceivedNotificationRepository recRepo;
 	
 	@Before
 	public void setUp() throws Exception
 	{
-		final Calendar qualTime = Calendar.getInstance(Locale.getDefault());
+		Calendar qualTime = Calendar.getInstance(Locale.getDefault());
 		qualTime.add(Calendar.YEAR, 10);
 		
-		notifDao.purgeNotifications(qualTime);
+		recRepo.deleteByReceivedTimeBefore(qualTime);
 	}
 	
 	@Test
@@ -70,7 +72,7 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 		final TimeoutDupStateManager mgr = new TimeoutDupStateManager();
 		boolean execptionOccured = false;
 		
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		try
 		{
@@ -89,15 +91,15 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 	{
 		TimeoutDupStateManager mgr = new TimeoutDupStateManager();
 
-		NotificationDuplicationDAO dao = mock(NotificationDuplicationDAO.class);
+		ReceivedNotificationRepository dao = mock(ReceivedNotificationRepository.class);
 		
-		mgr.setDao(dao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "1234", "", "", "", "");
 				
 		mgr.addNotificationForOriginalRecips(Arrays.asList(tx));
 		
-		verify(dao, never()).addNotification((String)any(), (String)any());
+		verify(dao, never()).save((ReceivedNotification)any());
 	}	
 	
 	@Test
@@ -105,15 +107,15 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 	{
 		TimeoutDupStateManager mgr = new TimeoutDupStateManager();
 
-		NotificationDuplicationDAO dao = mock(NotificationDuplicationDAO.class);
+		ReceivedNotificationRepository dao = mock(ReceivedNotificationRepository.class);
 		
-		mgr.setDao(dao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		final Tx tx = TestUtils.makeMessage(TxMessageType.MDN, "1234", "", "test@test.com", "me@you.com", "test@test.com");
 				
 		mgr.addNotificationForOriginalRecips(Arrays.asList(tx));
 		
-		verify(dao, never()).addNotification((String)any(), (String)any());
+		verify(dao, never()).save((ReceivedNotification)any());
 	}	
 	
 	@Test
@@ -121,15 +123,15 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 	{
 		TimeoutDupStateManager mgr = new TimeoutDupStateManager();
 		
-		NotificationDuplicationDAO dao = mock(NotificationDuplicationDAO.class);
+		ReceivedNotificationRepository dao = mock(ReceivedNotificationRepository.class);
 		
-		mgr.setDao(dao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "1234", "", "test@test.com", "me@you.com", "test@test.com");
 				
 		mgr.addNotificationForOriginalRecips(Arrays.asList(tx));
 
-		verify(dao, never()).addNotification((String)any(), (String)any());
+		verify(dao, never()).save((ReceivedNotification)any());
 	}	
 	
 	@Test
@@ -137,14 +139,14 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 	{
 		TimeoutDupStateManager mgr = new TimeoutDupStateManager();
 		
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		final Tx tx = TestUtils.makeReliableMessage(TxMessageType.IMF, "1234", "", "test@test.com", "me@you.com", "test@test.com", "", "");
 				
 		mgr.addNotificationForOriginalRecips(Arrays.asList(tx));
 
 		
-		Set<String> recAddresses = notifDao.getReceivedAddresses("1234", Arrays.asList("me@you.com"));
+		List<String> recAddresses = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase("1234", Arrays.asList("me@you.com".toUpperCase()));
 		assertTrue(recAddresses.contains("me@you.com"));
 	}	
 	
@@ -153,13 +155,14 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 	{
 		TimeoutDupStateManager mgr = new TimeoutDupStateManager();
 
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		final Tx tx = TestUtils.makeReliableMessage(TxMessageType.IMF, "1234", "", "test@test.com", "me@you.com,you@you.com", "test@test.com", "", "");
 				
 		mgr.addNotificationForOriginalRecips(Arrays.asList(tx));
 		
-		Set<String> recAddresses = notifDao.getReceivedAddresses("1234", Arrays.asList("me@you.com", "you@you.com"));
+		List<String> recAddresses = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase("1234", 
+				Arrays.asList("me@you.com".toUpperCase(), "you@you.com".toUpperCase()));
 		assertTrue(recAddresses.contains("me@you.com"));
 		assertTrue(recAddresses.contains("you@you.com"));
 	}	
@@ -169,20 +172,22 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 	{
 		TimeoutDupStateManager mgr = new TimeoutDupStateManager();
 
-		mgr.setDao(notifDao);
+		mgr.setReceivedNotificationRepository(recRepo);
 		
 		final Tx tx = TestUtils.makeReliableMessage(TxMessageType.IMF, "1234", "", "test@test.com", "me@you.com,you@you.com", "test@test.com", "", "");
 				
 		mgr.addNotificationForOriginalRecips(Arrays.asList(tx));
 		
-		Set<String> recAddresses = notifDao.getReceivedAddresses("1234", Arrays.asList("me@you.com", "you@you.com"));
+		List<String> recAddresses = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase("1234", 
+				Arrays.asList("me@you.com".toUpperCase(), "you@you.com".toUpperCase()));
 		assertTrue(recAddresses.contains("me@you.com"));
 		assertTrue(recAddresses.contains("you@you.com"));
 
 		// add it again
 		mgr.addNotificationForOriginalRecips(Arrays.asList(tx));	
 		
-		recAddresses = notifDao.getReceivedAddresses("1234", Arrays.asList("me@you.com", "you@you.com"));
+		recAddresses = recRepo.findByMessageidIgnoreCaseAndAddressInIgnoreCase("1234", 
+				Arrays.asList("me@you.com".toUpperCase(), "you@you.com".toUpperCase()));
 		assertEquals(2, recAddresses.size());
 	}		
 }

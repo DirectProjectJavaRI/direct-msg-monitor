@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MessageGenConfig
-{
+{	
 	@Autowired
 	protected VariableCompletionCondition variableCompletionCondition;
 	
@@ -76,7 +76,7 @@ public class MessageGenConfig
 	
 	@PostConstruct
 	public void setTemplateEndpoint()
-	{
+	{		
 		producerTemplate.setDefaultEndpointUri(startURI);
 	}
 	

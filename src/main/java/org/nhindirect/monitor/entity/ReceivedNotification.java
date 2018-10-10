@@ -19,7 +19,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.nhindirect.monitor.dao.entity;
+package org.nhindirect.monitor.entity;
 
 import java.util.Calendar;
 import java.util.Locale;

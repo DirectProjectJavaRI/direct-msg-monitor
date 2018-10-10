@@ -1,6 +1,7 @@
 package org.nhindirect.monitor.distributedaggregatorroute;
 
-import org.nhindirect.monitor.dao.AggregationDAO;
+import org.nhindirect.monitor.repository.AggregationCompletedRepository;
+import org.nhindirect.monitor.repository.AggregationRepository;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -12,11 +13,14 @@ public class TestNonReliableMessageMonitorRoute extends org.nhindirect.monitor.r
 	{
 		super.postProcessTest();
 		
-		final AggregationDAO dao = (AggregationDAO)context.getRegistry().lookup("aggregationDAO");
-		dao.purgeAll();
+		final AggregationRepository aggRepo = context.getRegistry().lookupByType(AggregationRepository.class).values().iterator().next();
+		final AggregationCompletedRepository aggCompRepo = context.getRegistry().lookupByType(AggregationCompletedRepository.class).values().iterator().next();
 		
-		assertEquals(0,dao.getAggregationKeys().size());
-		assertEquals(0,dao.getAggregationCompletedKeys().size());
+		aggRepo.deleteAll();
+		aggCompRepo.deleteAll();
+		
+		assertEquals(0,aggRepo.findAllKeys().size());
+		assertEquals(0,aggCompRepo.findAllKeys().size());
 	}
 	
     @Override

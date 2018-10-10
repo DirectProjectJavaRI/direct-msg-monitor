@@ -21,9 +21,12 @@ THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.nhindirect.monitor.aggregator.repository;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -35,9 +38,14 @@ import org.apache.camel.support.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.fusesource.hawtbuf.Buffer;
-import org.nhindirect.monitor.dao.AggregationDAO;
-import org.nhindirect.monitor.dao.entity.Aggregation;
-import org.nhindirect.monitor.dao.entity.AggregationCompleted;
+import org.nhindirect.monitor.entity.Aggregation;
+import org.nhindirect.monitor.entity.AggregationCompleted;
+import org.nhindirect.monitor.repository.AggregationCompletedRepository;
+import org.nhindirect.monitor.repository.AggregationRepository;
+import org.nhindirect.monitor.repository.AggregationRepositoryException;
+import org.nhindirect.monitor.repository.AggregationVersionException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * RecoverableAggregationRepository implementation that supports high concurrency of exchange flow.  This implementation is similar to the 
@@ -55,9 +63,14 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 	protected static final String AGGREGATION_ENTITY_VERSON = "AGGREGATION_ENTITY_VERSON";
 	
 	protected static final String AGGREGATION_COMPLETE_ENTITY_VERSON = "AGGREGATION_COMPLETE_ENTITY_VERSON";
+    
+	protected static final int DEFAULT_ENTITY_LOCK_INTERVAL = 120;
+	
+	protected int recoveredEntityLockInterval;
 	
 	protected HawtDBCamelCodec codec = new HawtDBCamelCodec();	
-	protected AggregationDAO dao;
+	protected AggregationRepository aggRepo;
+	protected AggregationCompletedRepository aggCompRepo;
 	protected long recoveryInterval = 5000;
 	protected boolean useRecovery = true;
 	protected int maximumRedeliveries;
@@ -68,27 +81,44 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 	 */
 	public ConcurrentJPAAggregationRepository()
 	{
-		
+		recoveredEntityLockInterval = DEFAULT_ENTITY_LOCK_INTERVAL;
 	}
 	
 	/**
 	 * Constructor with a DAO implementation
-	 * @param dao The underlying DAO that maintains the exchanges.
+	 * @param aggRepo The underlying repository that maintains the exchanges.
+	 * @param aggCompRepo The underlying repository that maintains the completed exchanges.
 	 */
-	public ConcurrentJPAAggregationRepository(AggregationDAO dao)
+	public ConcurrentJPAAggregationRepository(AggregationRepository aggRepo, AggregationCompletedRepository aggCompRepo, int recoveredEntityLockInterval)
 	{
-		this.dao = dao;
+		this.aggRepo = aggRepo;
+		this.aggCompRepo = aggCompRepo;
 	}
 	
 	/**
-	 * Sets the aggregation DAO that maintains the exchanges.
-	 * @param dao The underlying DAO that maintains the exchanges.
+	 * Sets the aggregation repository that maintains the exchanges.
+	 * @param aggRepo The underlying repository that maintains the exchanges.
 	 */
-	public void setAggreationDAO(AggregationDAO dao)
+	public void setAggreationRepository(AggregationRepository aggRepo)
 	{
-		this.dao = dao;
+		this.aggRepo = aggRepo;
 	}
 
+	/**
+	 * Sets the aggregation repository that maintains the completed exchanges.
+	 * @param aggRepo The underlying repository that maintains the completed exchanges.
+	 */
+	public void setAggreationCompletedRepository(AggregationCompletedRepository aggCompRepo)
+	{
+		this.aggCompRepo = aggCompRepo;
+	}
+	
+	public void setRecoveredEntityLockInterval(int recoveredEntityLockInterval)
+	{
+		this.recoveredEntityLockInterval = recoveredEntityLockInterval;
+	}
+	
+	
 	/**
 	 * {@inheritDoc}
 	 * This specific implementation throws a Runtime exception on DAO errors.  This implementation also checks for
@@ -100,7 +130,8 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 	 * 
 	 */
 	@Override
-	public Exchange add(CamelContext camelContext, String key, Exchange exchange) 
+	@Transactional
+	public synchronized Exchange add(CamelContext camelContext, String key, Exchange exchange) 
 	{
         try 
         {
@@ -117,8 +148,34 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
         	agg.setVersion(currentEntityVersion == null ? 0 : currentEntityVersion);
         	
         	// add/update the repository... 
-        	dao.addUpdateAggregation(agg);
+        	//dao.addUpdateAggregation(agg);
+			// find the aggregation
+			final Optional<Aggregation> existingAggrOpt = aggRepo.findById(key);
+			
+			// if its not there by the requested aggregation has a version > 1, then somethine is wrong
+			if (!existingAggrOpt.isPresent() && agg.getVersion() > 0)
+				throw new AggregationVersionException("Aggregation not found but expected to exist due to non 0 version number");
         	
+			if (existingAggrOpt.isPresent())
+			{
+				final Aggregation existingAggr = existingAggrOpt.get();
+				
+				// make sure the version on the existing aggregator matches ours
+				if (existingAggr.getVersion() != agg.getVersion())
+					throw new AggregationVersionException("Version number of aggreation does not match what is in the store.");
+				
+				existingAggr.setExchangeBlob(agg.getExchangeBlob());
+				existingAggr.setVersion(agg.getVersion() + 1);
+				agg = aggRepo.save(existingAggr);
+			}
+			else
+			{
+				// initial add... set the version number to 1
+				agg.setVersion(agg.getVersion() + 1);
+				agg = aggRepo.save(agg);
+			}
+			
+			
         	// update the version on the exchange
         	exchange.setProperty(AGGREGATION_ENTITY_VERSON, agg.getVersion());
         }
@@ -144,9 +201,11 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 		try
 		{
 			// get the aggregation
-			final Aggregation agg = dao.getAggregation(key);
-			if (agg == null)
+			final Optional<Aggregation> aggOpt = aggRepo.findById(key);
+			if (!aggOpt.isPresent())
 				return null;
+			
+			final Aggregation agg = aggOpt.get();
 			
 			// deserialized to an exchange object
 			retVal = codec.unmarshallExchange(camelContext, new Buffer(agg.getExchangeBlob()));
@@ -173,6 +232,7 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 	 * and attempt the aggregation and completion condition again.
 	 */
 	@Override
+	@Transactional
 	public void remove(CamelContext camelContext, String key, Exchange exchange) 
 	{
         try 
@@ -190,7 +250,29 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
         	
         	// removed the exchange from the currently working set and move it to completed set
         	// for later confirmation
-        	dao.removeAggregation(agg, exchange.getExchangeId());
+        	final Optional<Aggregation> existingAggOpt = aggRepo.findById(key);
+        	if (!existingAggOpt.isPresent())
+        		throw new AggregationRepositoryException("Aggregation does not exist is store.");	
+        	
+        	
+        	final Aggregation existingAgg = existingAggOpt.get();
+			// check the version number for consistency
+			if (existingAgg.getVersion() != agg.getVersion())
+				throw new AggregationVersionException("Version number of aggreation does not match what is in the store.");		
+			
+			// remove
+			aggRepo.delete(existingAgg);
+			
+        	
+			// add to the completed repository
+			final AggregationCompleted completed = new AggregationCompleted();
+			
+			completed.setExchangeBlob(existingAgg.getExchangeBlob());
+			completed.setId(exchange.getExchangeId());
+			completed.setVersion(1);
+			
+			aggCompRepo.save(completed);
+
         }
         catch (Exception e) 
         {
@@ -208,7 +290,11 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
         try 
         {
         	// confirm the aggregation and removed it from the repository
-        	dao.confirmAggregation(exchangeId);
+        	this.aggCompRepo.deleteById(exchangeId);
+        }
+        catch (EmptyResultDataAccessException e)
+        {
+        	/* no-op, this is fine */
         }
         catch (Exception e) 
         {
@@ -226,7 +312,7 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
         try 
         {
         	// get the list of keys
-			List<String> keys = dao.getAggregationKeys();
+			List<String> keys = aggRepo.findAllKeys();
 			
 			// return an empty set if no keys are found
 			if (keys == null || keys.isEmpty())
@@ -248,7 +334,7 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
         try 
         {		
         	// get the list of unconfirmed exchange keys
-			List<String> keys = dao.getAggregationCompletedKeys();
+			final List<String> keys = aggCompRepo.findAllKeys();
 			
 			// return an empty set if no keys are found
 			if (keys == null || keys.isEmpty())
@@ -277,17 +363,29 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 		try
 		{
 			// recover the exchnage from the repository
-			final AggregationCompleted agg = dao.getAggregationCompleted(exchangeId, true);
+			final Optional<AggregationCompleted> aggOpt = this.aggCompRepo.findById(exchangeId);
 			
 			// not found or is locked... return null
-			if (agg == null)
+			if (!aggOpt.isPresent())
 				return null;
 			
+			AggregationCompleted entity = aggOpt.get();
+			
+			if (entity.getRecoveryLockedUntilDtTm() != null && entity.getRecoveryLockedUntilDtTm().after(Calendar.getInstance(Locale.getDefault())))
+				return null; 
+			
+			final Calendar newRecoveryLockTime = Calendar.getInstance(Locale.getDefault());
+			newRecoveryLockTime.add(Calendar.SECOND, recoveredEntityLockInterval);
+			entity.setRecoveryLockedUntilDtTm(newRecoveryLockTime);
+			
+			// persist the time new lock time and increment the update count
+			aggCompRepo.save(entity);
+			
 			// deserialize exchange 
-			retVal = codec.unmarshallExchange(camelContext, new Buffer(agg.getExchangeBlob()));
+			retVal = codec.unmarshallExchange(camelContext, new Buffer(entity.getExchangeBlob()));
 			
 			// set the version number of the exchange
-			retVal.setProperty(AGGREGATION_COMPLETE_ENTITY_VERSON, agg.getVersion());
+			retVal.setProperty(AGGREGATION_COMPLETE_ENTITY_VERSON, entity.getVersion());
 		}
         catch (Exception e) 
         {
@@ -392,8 +490,8 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 		 * Adapted from JdbcAggregationRepository
 		 */
 	
-		if (dao == null)
-			throw new IllegalStateException("Aggregation respository DAO cannot be null");
+		if (aggCompRepo == null || aggRepo == null)
+			throw new IllegalStateException("Aggregation respository sources cannot be null");
 		
         // log number of existing exchanges
         int current = getKeys().size();

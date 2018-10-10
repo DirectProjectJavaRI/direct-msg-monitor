@@ -6,8 +6,8 @@ import org.nhindirect.monitor.condition.impl.GeneralCompletionCondition;
 import org.nhindirect.monitor.condition.impl.TimelyAndReliableCompletionCondition;
 import org.nhindirect.monitor.condition.impl.VariableCompletionCondition;
 import org.nhindirect.monitor.condition.impl.VariableTimeoutCondition;
-import org.nhindirect.monitor.dao.NotificationDuplicationDAO;
 import org.nhindirect.monitor.expression.MessageIdCorrelationExpression;
+import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 public class ConditionConfig
 {
 	@Autowired
-	protected NotificationDuplicationDAO notificationDao;
+	protected ReceivedNotificationRepository recRepo;
 	
 	@Value("${direct.msgmonitor.condition.generalConditionTimeout:3600000}")	
 	private String generalConditionTimeout;
@@ -53,7 +53,7 @@ public class ConditionConfig
 	public TimelyAndReliableCompletionCondition reliableCompletionCondition()
 	{
 		final TimelyAndReliableCompletionCondition retVal = new TimelyAndReliableCompletionCondition();
-		retVal.setDupDAO(notificationDao);
+		retVal.setReceivedNotificationRepository(recRepo);
 		
 		return retVal;
 	}

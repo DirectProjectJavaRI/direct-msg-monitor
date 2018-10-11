@@ -15,8 +15,6 @@ import org.nhindirect.common.tx.model.TxMessageType;
 import org.nhindirect.monitor.SpringBaseTest;
 import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -33,16 +31,6 @@ public class TxEventSinkTest extends SpringBaseTest
 	
 	@Autowired
 	private TxEventSink sink;
-	
-	@Configuration
-	public static class ObjectMapperConfig
-	{
-		@Bean
-		public ObjectMapper objectMapper()
-		{
-			return new ObjectMapper();
-		}
-	}
 	
 	@Test
 	public void testSendTxToSink() throws Exception

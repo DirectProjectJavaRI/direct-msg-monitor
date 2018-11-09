@@ -37,6 +37,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Resource that acts as a RESTful entry point into a Camel route that handles message monitoring and tracking.  The route
  * starting point is contained in a Camel producer template that injected at creation time.
@@ -103,7 +105,7 @@ public class TxsResource
 	 * is returned.  500 is returned if an error occurs.
 	 */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)         
-    public ResponseEntity<Void> addTx(@RequestBody Tx tx)
+    public ResponseEntity<Mono<Void>> addTx(@RequestBody Tx tx)
     {
     	///CLOVER:OFF
     	if (LOGGER.isTraceEnabled())
@@ -144,7 +146,7 @@ public class TxsResource
      * the notification message should be suppressed.  500 is returned if an error occurs.
      */
     @PostMapping(value = "suppressNotification", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)        
-    public ResponseEntity<Boolean> supressNotification(@RequestBody Tx notificationMessage) 
+    public ResponseEntity<Mono<Boolean>> supressNotification(@RequestBody Tx notificationMessage) 
     {
     	if (dupStateManager == null)
     		throw new IllegalStateException("Duplication state manager cannot be null.  Please examine the txs resource configuration");
@@ -152,7 +154,7 @@ public class TxsResource
     	try
     	{
     		final Boolean retEntity = dupStateManager.suppressNotification(notificationMessage);
-    		return ResponseEntity.status(HttpStatus.OK).cacheControl(noCache).body(retEntity);
+    		return ResponseEntity.status(HttpStatus.OK).cacheControl(noCache).body(Mono.just(retEntity));
     	}
     	catch (DuplicateNotificationStateManagerException e)
     	{

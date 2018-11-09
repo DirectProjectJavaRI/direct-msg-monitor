@@ -11,6 +11,8 @@ import org.junit.Test;
 import org.nhindirect.common.tx.model.Tx;
 import org.springframework.http.ResponseEntity;
 
+import reactor.core.publisher.Mono;
+
 public class TxsResource_addTxTest
 {
 	@Test
@@ -44,7 +46,7 @@ public class TxsResource_addTxTest
 		
 		TxsResource resource = new TxsResource(template, null);
 
-		ResponseEntity<Void> res = resource.addTx(tx);
+		ResponseEntity<Mono<Void>> res = resource.addTx(tx);
 		
 		assertEquals(500, res.getStatusCodeValue());
 	}
@@ -58,7 +60,7 @@ public class TxsResource_addTxTest
 		
 		TxsResource resource = new TxsResource(template, null);
 		
-		ResponseEntity<Void> res = resource.addTx(tx);
+		ResponseEntity<Mono<Void>> res = resource.addTx(tx);
 		
 		assertEquals(201, res.getStatusCodeValue());
 	}

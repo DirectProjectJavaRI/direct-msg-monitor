@@ -26,12 +26,12 @@ import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.springframework.http.CacheControl;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import reactor.core.publisher.Mono;
 /**
  * Resource to detect if the web application is running.
  * @author Greg Meyer
@@ -57,7 +57,7 @@ public class HealthCheckResource
 	 */
     @SuppressWarnings("deprecation")
 	@GetMapping(produces = MediaType.TEXT_HTML_VALUE)
-	public ResponseEntity<String> healthCheck() throws IOException
+	public Mono<String> healthCheck() throws IOException
 	{
 		// very simple health check to validate the web application is running
 		// just return a hard coded HTML resource (HTTP 200) if we're here
@@ -69,7 +69,7 @@ public class HealthCheckResource
     	{
     		respStr = IOUtils.toString(str);
     	
-    		return ResponseEntity.status(HttpStatus.OK).cacheControl(noCache).body(respStr);
+    		return Mono.just(respStr);
     	}
     	finally
     	{

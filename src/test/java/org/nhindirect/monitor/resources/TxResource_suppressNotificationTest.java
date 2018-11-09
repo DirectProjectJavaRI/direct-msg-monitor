@@ -12,6 +12,8 @@ import org.nhindirect.monitor.processor.DuplicateNotificationStateManager;
 import org.nhindirect.monitor.processor.DuplicateNotificationStateManagerException;
 import org.springframework.http.ResponseEntity;
 
+import reactor.core.publisher.Mono;
+
 public class TxResource_suppressNotificationTest 
 {
 	@Test
@@ -43,9 +45,9 @@ public class TxResource_suppressNotificationTest
 		
 		TxsResource resource = new TxsResource(null, dupMgr);
 		
-		ResponseEntity<Boolean> res = resource.supressNotification(tx);
+		ResponseEntity<Mono<Boolean>> res = resource.supressNotification(tx);
 		assertEquals(200, res.getStatusCodeValue());
-		assertFalse((Boolean)res.getBody());
+		assertFalse((Boolean)res.getBody().block());
 	}
 	
 	@Test
@@ -57,9 +59,9 @@ public class TxResource_suppressNotificationTest
 		
 		TxsResource resource = new TxsResource(null, dupMgr);
 		
-		ResponseEntity<Boolean> res = resource.supressNotification(tx);
+		ResponseEntity<Mono<Boolean>> res = resource.supressNotification(tx);
 		assertEquals(200, res.getStatusCodeValue());
-		assertTrue((Boolean)res.getBody());
+		assertTrue((Boolean)res.getBody().block());
 	}
 	
 	@Test
@@ -71,7 +73,7 @@ public class TxResource_suppressNotificationTest
 		
 		TxsResource resource = new TxsResource(null, dupMgr);
 		
-		ResponseEntity<Boolean> res = resource.supressNotification(tx);
+		ResponseEntity<Mono<Boolean>> res = resource.supressNotification(tx);
 		assertEquals(500, res.getStatusCodeValue());
 	}
 }

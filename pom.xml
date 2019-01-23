@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>direct-msg-monitor</artifactId>    
     <name>Direct Project message monitor</name>
-    <version>6.0-SNAPSHOT</version>
+    <version>6.0</version>
     <description>Direct Project message monitor for timely and reliable messaging</description>
     <inceptionYear>2010</inceptionYear>
     <url>http://api.nhindirect.org/x/www/api.nhindirect.org/java/site/direct-msg-monitor/${project.version}</url> 
@@ -31,23 +31,15 @@
         <maven>3.0.0</maven>
    </prerequisites>   
   <scm>
-     <url>http://code.google.com/p/nhin-d/source/browse/#hg/java/direct-msg-monitor</url>  
-     <connection>scm:hg:https://nhin-d.googlecode.com/hg/nhin-d/java/direct-msg-monitor</connection>
+     <url>scm:git:https://github.com/DirectProjectJavaRI/direct-msg-monitor.git</url>  
+     <connection>scm:git:https://github.com/DirectProjectJavaRI/direct-msg-monitor.git</connection>
   </scm> 
   <licenses>
      <license>
         <name>New BSD License</name>
         <url>http://nhindirect.org/BSDLicense</url>
      </license>
-  </licenses>  
-	 <!-- Temp repository for Spring Boot Milestone -->
-	 <repositories>
-       <repository>
-           <id>spring-milestone</id>
-           <name>Spring Milestone Releases</name>
-           <url>https://repo.spring.io/milestone/</url>
-       </repository>
-    </repositories>       
+  </licenses>      
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<camel.version>2.22.0</camel.version>
@@ -64,7 +56,7 @@
 		  <dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-parent</artifactId>
-				<version>Greenwich.RC1</version>
+				<version>Greenwich.RELEASE</version>
 				<type>pom</type>
 				<scope>import</scope>
 		  </dependency>  		   			  		  			
@@ -123,12 +115,12 @@
 		<dependency>
 			<groupId>org.nhind</groupId>
 			<artifactId>direct-common</artifactId>
-			<version>6.0-SNAPSHOT</version>		
+			<version>6.0</version>		
 		</dependency>  
 		<dependency>
 			<groupId>org.nhind</groupId>
 			<artifactId>direct-msg-monitor-model</artifactId>
-			<version>6.0-SNAPSHOT</version>		
+			<version>6.0</version>		
 		</dependency> 		    
 		<dependency>
 			<groupId>javax.mail</groupId>
@@ -321,26 +313,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin>    
-        <plugin>
-            <groupId>com.atlassian.maven.plugins</groupId>
-            <artifactId>maven-clover2-plugin</artifactId>
-            <version>3.1.0</version>
-            <configuration>
-                <jdk>1.8</jdk>
-			<licenseLocation>
-				${project.basedir}/../licenses/clover.license
-			</licenseLocation>
-            </configuration>
-            <executions>
-                <execution>
-                    <phase>pre-site</phase>
-                    <goals>
-                        <goal>instrument</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>	    
+      </plugin>        
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-jar-plugin</artifactId>
@@ -404,19 +377,19 @@
                </dependency>	
 		</dependencies>			
 	 </plugin>     
-         <!--  for releases only
 	     <plugin>
 	      	<groupId>org.apache.maven.plugins</groupId> 
 	        <artifactId>maven-javadoc-plugin</artifactId>
 	        <version>2.6.1</version>
 	        <configuration>
-	          <charset>UTF-8</charset>
-	          <docencoding>UTF-8</docencoding>
-	          <docfilessubdirs>true</docfilessubdirs>
-              <detectJavaApiLink>true</detectJavaApiLink>
-              <detectLinks>true</detectLinks>
-	          <source>1.8</source>
-	          <show>public</show>               	          
+			    <additionalparam>-Xdoclint:none</additionalparam>
+				<charset>UTF-8</charset>
+				<docencoding>UTF-8</docencoding>
+				<docfilessubdirs>true</docfilessubdirs>
+				<detectJavaApiLink>true</detectJavaApiLink>
+				<detectLinks>true</detectLinks>
+				<source>1.8</source>
+				<show>public</show>          	          
 	        </configuration>
 	        <executions>
 	            <execution>
@@ -431,6 +404,7 @@
 	            </execution>
 	        </executions>		        
 	     </plugin>  
+         <!--  for releases only	     
 	     <plugin>
              <groupId>org.apache.maven.plugins</groupId>
              <artifactId>maven-gpg-plugin</artifactId>
@@ -462,18 +436,19 @@
 	      <plugin>
 	      	<groupId>org.apache.maven.plugins</groupId> 
 	        <artifactId>maven-javadoc-plugin</artifactId>
-	        <version>3.0.1</version>
+	        <version>2.6.1</version>
 	        <configuration>
-	          <charset>UTF-8</charset>
-	          <docencoding>UTF-8</docencoding>
-	          <docfilessubdirs>true</docfilessubdirs>
-              <detectJavaApiLink>true</detectJavaApiLink>
-              <detectLinks>true</detectLinks>
-	          <source>1.8</source>
-	          <show>public</show>    
-	          <excludePackageNames>
-	              org.nhindirect.monitor.dao.impl:org.nhindirect.monitor.processor.impl
-	          </excludePackageNames>	           	          
+			    <additionalparam>-Xdoclint:none</additionalparam>
+				<charset>UTF-8</charset>
+				<docencoding>UTF-8</docencoding>
+				<docfilessubdirs>true</docfilessubdirs>
+				<detectJavaApiLink>true</detectJavaApiLink>
+				<detectLinks>true</detectLinks>
+				<source>1.8</source>
+				<show>public</show>
+		        <excludePackageNames>
+		            org.nhindirect.monitor.dao.impl:org.nhindirect.monitor.processor.impl:org.nhindirect.monitor.repository:org.nhindirect.monitor.springconfig
+		        </excludePackageNames>	           	          
 	        </configuration>
 	      </plugin>
 			<plugin>
@@ -494,7 +469,6 @@
 	        <plugin>
 	            <groupId>org.codehaus.mojo</groupId> 
 	            <artifactId>findbugs-maven-plugin</artifactId>
-	            <version>1.2</version> 
 	            <configuration>
 	                <effort>Max</effort>
 	                <excludeFilterFile>${project.basedir}/src/report/findbugs-exclude.xml</excludeFilterFile>
@@ -511,17 +485,7 @@
 	                    <tag>@deprecated</tag>
 	                </tags>
 	            </configuration>
-	        </plugin>	
-			<plugin>
-	            <groupId>com.atlassian.maven.plugins</groupId>
-	            <artifactId>maven-clover2-plugin</artifactId>
-	            <version>3.1.0</version>
-				<configuration>
-					<licenseLocation>
-						${project.basedir}/../licenses/clover.license
-					</licenseLocation>
-				</configuration>
-			</plugin>	                   
+	        </plugin>	                   
 		</plugins>
   </reporting>
   <distributionManagement>

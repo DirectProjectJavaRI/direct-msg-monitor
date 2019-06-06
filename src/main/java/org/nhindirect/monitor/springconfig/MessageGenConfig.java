@@ -45,7 +45,7 @@ public class MessageGenConfig
 	@Value("${direct.msgmonitor.dsnGenerator.header:%original_sender_tag%,<br/>}")	
 	private String header;
 	
-	@Value("${direct.msgmonitor.dsnGenerator.footer:<u>Troubleshooting Information</u></b><br/><br/>%headers_tag%å}")	
+	@Value("${direct.msgmonitor.dsnGenerator.footer:<b><u>Troubleshooting Information</u></b><br/><br/>%headers_tag%}")	
 	private String footer;
 	
 	@Value("${direct.msgmonitor.route.start.endpointuri:direct:start}")

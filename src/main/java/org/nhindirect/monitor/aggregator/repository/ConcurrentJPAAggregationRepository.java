@@ -44,6 +44,8 @@ import org.nhindirect.monitor.repository.AggregationCompletedRepository;
 import org.nhindirect.monitor.repository.AggregationRepository;
 import org.nhindirect.monitor.repository.AggregationRepositoryException;
 import org.nhindirect.monitor.repository.AggregationVersionException;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -165,13 +167,10 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 					throw new AggregationVersionException("Version number of aggreation does not match what is in the store.");
 				
 				existingAggr.setExchangeBlob(agg.getExchangeBlob());
-				existingAggr.setVersion(agg.getVersion() + 1);
 				agg = aggRepo.save(existingAggr);
 			}
 			else
 			{
-				// initial add... set the version number to 1
-				agg.setVersion(agg.getVersion() + 1);
 				agg = aggRepo.save(agg);
 			}
 			
@@ -200,8 +199,14 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 
 		try
 		{
-			// get the aggregation
-			final Optional<Aggregation> aggOpt = aggRepo.findById(key);
+			Aggregation keyAggregation = new Aggregation();
+			keyAggregation.setId(key);
+			
+			// get the aggregation - we use matcher on purpose instead of findById. findById
+			// in the repo uses pessimistic_write lock which is bound to increase fetch
+			// time.
+			final Optional<Aggregation> aggOpt = aggRepo.findOne(Example.of(keyAggregation, ExampleMatcher.matching()
+					.withMatcher("id", match -> match.ignoreCase(true)).withIgnorePaths("blob", "version")));
 			if (!aggOpt.isPresent())
 				return null;
 			
@@ -218,6 +223,7 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
         	// wrap exception in a runtime exception
         	throw new RuntimeException("Error retrieving from repository aggregation with key " + key, e);
         }
+
 		
 		return retVal;
 	}

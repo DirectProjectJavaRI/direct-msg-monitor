@@ -1,7 +1,7 @@
 package org.nhindirect.monitor.aggregator.repository;
 
 
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
@@ -22,23 +22,21 @@ import org.nhindirect.common.tx.model.TxDetailType;
 import org.nhindirect.common.tx.model.TxMessageType;
 import org.nhindirect.monitor.TestApplication;
 import org.nhindirect.monitor.aggregator.repository.ConcurrentJPAAggregationRepository;
+import org.nhindirect.monitor.entity.Aggregation;
 import org.nhindirect.monitor.repository.AggregationCompletedRepository;
 import org.nhindirect.monitor.repository.AggregationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.data.domain.Example;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Transactional;
 
 import org.nhindirect.monitor.util.TestUtils;
 
 
 @RunWith(CamelSpringBootRunner.class)
-@DataJpaTest
-@Transactional
 @ContextConfiguration(classes=TestApplication.class)
 @DirtiesContext
 @ActiveProfiles("producerMock")
@@ -90,7 +88,7 @@ public class ConcurrentJPAAggregationRepository_getTest extends CamelSpringTestS
 		final Tx retrievedTx = (Tx)ex.getIn().getBody();
 		assertEquals("12345", retrievedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
 		final Integer version = (Integer)ex.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
-		assertEquals(1, version.intValue());
+		assertEquals(0, version.intValue());
 	}
 	
 	@Test
@@ -120,17 +118,18 @@ public class ConcurrentJPAAggregationRepository_getTest extends CamelSpringTestS
 	}
 	
 	@Test
+	@SuppressWarnings("unchecked")
 	public void testGet_daoException_assertException() throws Exception
 	{
-		AggregationCompletedRepository dao = mock(AggregationCompletedRepository.class);
-		doThrow(new RuntimeException()).when(dao).findById((String)any());
+		AggregationRepository dao = mock(AggregationRepository.class);
+		doThrow(new RuntimeException()).when(dao).findOne((Example<Aggregation>)any());
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, dao, 120);
+		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(dao, aggCompRepo, 120);
 		
 		boolean exceptionOccured = false;
 		try
 		{
-			repo.recover(context, "12345");
+			repo.get(context, "12345");
 		}
 		catch(RuntimeException e)
 		{

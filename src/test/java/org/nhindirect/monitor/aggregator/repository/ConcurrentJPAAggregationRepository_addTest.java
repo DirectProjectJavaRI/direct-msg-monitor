@@ -20,18 +20,14 @@ import org.nhindirect.monitor.repository.AggregationCompletedRepository;
 import org.nhindirect.monitor.repository.AggregationRepository;
 import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Transactional;
 
 
 @RunWith(CamelSpringBootRunner.class)
-@DataJpaTest
-@Transactional
 @ContextConfiguration(classes=TestApplication.class)
 @DirtiesContext
 @ActiveProfiles("producerMock")
@@ -74,7 +70,7 @@ public class ConcurrentJPAAggregationRepository_addTest extends CamelSpringTestS
 		final Tx retrievedTx = (Tx)ex.getIn().getBody();
 		assertEquals("12345", retrievedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
 		final Integer version = (Integer)ex.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
-		assertEquals(1, version.intValue());
+		assertEquals(0, version.intValue());
 	}
 	
 	@Test
@@ -107,7 +103,7 @@ public class ConcurrentJPAAggregationRepository_addTest extends CamelSpringTestS
 		
 		assertEquals("12345", retrievedTxs.iterator().next().getDetail(TxDetailType.MSG_ID).getDetailValue());
 		final Integer version = (Integer)retrievedEx.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
-		assertEquals(2, version.intValue());
+		assertEquals(1, version.intValue());
 	}
 	
 	@Test
@@ -152,7 +148,7 @@ public class ConcurrentJPAAggregationRepository_addTest extends CamelSpringTestS
 		final Tx retrievedTx = (Tx)ex.getIn().getBody();
 		assertEquals("12345", retrievedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
 		final Integer version = (Integer)ex.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
-		assertEquals(1, version.intValue());
+		assertEquals(0, version.intValue());
 
 	}
 	

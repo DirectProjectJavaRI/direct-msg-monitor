@@ -17,20 +17,16 @@ import org.nhindirect.monitor.aggregator.repository.ConcurrentJPAAggregationRepo
 import org.nhindirect.monitor.repository.AggregationCompletedRepository;
 import org.nhindirect.monitor.repository.AggregationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Transactional;
 
 import org.nhindirect.monitor.util.TestUtils;
 
 
 @RunWith(CamelSpringBootRunner.class)
-@DataJpaTest
-@Transactional
 @ContextConfiguration(classes=TestApplication.class)
 @DirtiesContext
 @ActiveProfiles("producerMock")

@@ -5,6 +5,24 @@
         ---
         Greg Meyer
         ---
+        
+{6.0.1}
+
+    Changes included with release 6.0.1
+    
+    []
+    
+    Enhancements
+    
+ 	* NA
+    [] 
+     
+    Bug Fixes
+
+    * With Multiple instances of the service, it was seen that Aggregation of messages failed when there were concurrent requests in process for the parent message across instances with StaleObjectException / Optimistic lock failure. This could lead to false DSN messages being sent out -
+      We make use of pessimistic_write locking to resolve this and not lose any tx for aggregation. 
+    * Enabling Hibernate to handle versions on Aggregation table.
+    * Replaced some deprecated imports on JUnit tests.
 
 {6.0}
 

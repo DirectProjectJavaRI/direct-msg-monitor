@@ -1,46 +1,62 @@
 package org.nhindirect.monitor.distributedaggregatorroute;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.spring.CamelSpringTestSupport;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.nhindirect.common.mail.MDNStandard;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
+import org.nhindirect.monitor.SpringBaseTest;
 import org.nhindirect.monitor.repository.AggregationCompletedRepository;
 import org.nhindirect.monitor.repository.AggregationRepository;
-import org.springframework.context.support.AbstractXmlApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.TestPropertySource;
 import org.nhindirect.monitor.util.TestUtils;
 
-public class TestTimedOutMonitorRoute extends CamelSpringTestSupport 
+@TestPropertySource(locations="classpath:properties/shorttimeout.properties", 
+properties = "camel.springboot.xmlRoutes=classpath:routes/monitor-route-to-mock-with-short-timeout.xml")
+public class TestTimedOutMonitorRoute extends SpringBaseTest 
 {
-	@SuppressWarnings("deprecation")
-	@Override
-	public void postProcessTest() throws Exception
+	@Autowired
+	protected CamelContext context;
+	
+	@Autowired
+	private AggregationRepository aggRepo;
+	
+	@Autowired
+	private AggregationCompletedRepository aggCompRepo;
+	
+	protected MockEndpoint mock;
+	
+	protected ProducerTemplate template;
+	
+	@BeforeEach
+	public void setUp()
 	{
-		super.postProcessTest();
-		
-		final AggregationRepository aggRepo = context.getRegistry().lookupByType(AggregationRepository.class).values().iterator().next();
-		final AggregationCompletedRepository aggCompRepo = context.getRegistry().lookupByType(AggregationCompletedRepository.class).values().iterator().next();
+		super.setUp();
 		
 		aggRepo.deleteAll();
 		aggCompRepo.deleteAll();
 		
-		assertEquals(0,aggRepo.findAllKeys().size());
-		assertEquals(0,aggCompRepo.findAllKeys().size());
+		mock = (MockEndpoint)context.getEndpoint("mock:result");
+		mock.reset();
+		
+		template = context.createProducerTemplate();
 	}
 	
 	@Test
 	public void testTimeoutNonReliableMessage_conditionNotComplete_assertTimedOut() throws Exception
 	{
-		MockEndpoint mock = getMockEndpoint("mock:result");
-
 
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();
@@ -62,8 +78,6 @@ public class TestTimedOutMonitorRoute extends CamelSpringTestSupport
 	@Test
 	public void testTimeoutReliableMessage_conditionNotComplete_assertTimedOut() throws Exception
 	{
-		MockEndpoint mock = getMockEndpoint("mock:result");
-
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -90,8 +104,6 @@ public class TestTimedOutMonitorRoute extends CamelSpringTestSupport
 	@Test
 	public void testTimeoutReliableMessage_conditionNotComplete_assertTimedOutAndAggregatedTimeoutDecayed() throws Exception
 	{
-		MockEndpoint mock = getMockEndpoint("mock:result");
-
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -124,11 +136,4 @@ public class TestTimedOutMonitorRoute extends CamelSpringTestSupport
 		// make sure the aggregated timeout decayed properly... it should now be <= 1000 ms
 		assertTrue((Long)exchange.getProperty(Exchange.AGGREGATED_TIMEOUT) <= 1000);
 	}
-	
-	
-    @Override
-    protected AbstractXmlApplicationContext createApplicationContext() 
-    {
-    	return new ClassPathXmlApplicationContext("distributedAggregatorRoutes/monitor-route-to-mock-with-short-timeout.xml");
-    }
 }

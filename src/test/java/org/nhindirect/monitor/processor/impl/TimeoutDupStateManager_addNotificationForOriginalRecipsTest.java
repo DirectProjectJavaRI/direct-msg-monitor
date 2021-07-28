@@ -1,7 +1,7 @@
 package org.nhindirect.monitor.processor.impl;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -13,9 +13,11 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
 import org.nhindirect.monitor.TestApplication;
@@ -26,10 +28,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @DataJpaTest
 @Transactional
 @ContextConfiguration(classes=TestApplication.class)
@@ -39,7 +41,7 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 	@Autowired
 	private ReceivedNotificationRepository recRepo;
 	
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception
 	{
 		Calendar qualTime = Calendar.getInstance(Locale.getDefault());
@@ -70,20 +72,14 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 	public void testAddNotificationForOriginalRecips_nullCollection_assertException() throws Exception
 	{
 		final TimeoutDupStateManager mgr = new TimeoutDupStateManager();
-		boolean execptionOccured = false;
 		
 		mgr.setReceivedNotificationRepository(recRepo);
 		
-		try
+		Assertions.assertThrows(IllegalArgumentException.class, () ->
 		{
 			mgr.addNotificationForOriginalRecips(null);
-		}
-		catch (IllegalArgumentException e)
-		{
-			execptionOccured = true;
-		}
-		
-		assertTrue(execptionOccured);
+		});
+
 	}
 	
 	@Test
@@ -93,7 +89,7 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 
 		ReceivedNotificationRepository dao = mock(ReceivedNotificationRepository.class);
 		
-		mgr.setReceivedNotificationRepository(recRepo);
+		mgr.setReceivedNotificationRepository(dao);
 		
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "1234", "", "", "", "");
 				
@@ -109,7 +105,7 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 
 		ReceivedNotificationRepository dao = mock(ReceivedNotificationRepository.class);
 		
-		mgr.setReceivedNotificationRepository(recRepo);
+		mgr.setReceivedNotificationRepository(dao);
 		
 		final Tx tx = TestUtils.makeMessage(TxMessageType.MDN, "1234", "", "test@test.com", "me@you.com", "test@test.com");
 				
@@ -125,7 +121,7 @@ public class TimeoutDupStateManager_addNotificationForOriginalRecipsTest
 		
 		ReceivedNotificationRepository dao = mock(ReceivedNotificationRepository.class);
 		
-		mgr.setReceivedNotificationRepository(recRepo);
+		mgr.setReceivedNotificationRepository(dao);
 		
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "1234", "", "test@test.com", "me@you.com", "test@test.com");
 				

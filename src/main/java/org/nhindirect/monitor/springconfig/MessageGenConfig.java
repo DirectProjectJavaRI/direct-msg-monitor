@@ -10,10 +10,17 @@ import org.nhindirect.monitor.condition.impl.VariableCompletionCondition;
 import org.nhindirect.monitor.processor.DSNMailSender;
 import org.nhindirect.monitor.processor.DSNMessageGenerator;
 import org.nhindirect.monitor.processor.SMTPClientFactory;
+import org.nhindirect.monitor.processor.SMTPDSNMailSender;
+import org.nhindirect.monitor.processor.StreamsDSNMailSender;
+import org.nhindirect.monitor.processor.StreamsDSNMailSenderSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 @Configuration
 public class MessageGenConfig
@@ -86,10 +93,33 @@ public class MessageGenConfig
 		return new SMTPClientFactory();
 	}
 	
-	@Bean 
-	public DSNMailSender dsnSender()
+	@Bean("dsnSender")
+	@ConditionalOnMissingBean
+	@ConditionalOnProperty(name="direct.msgmonitor.dsnSender.useStreamsSender", havingValue="true")
+	public DSNMailSender streamsDsnSender(Environment env, StreamBridge bridge)
 	{
-		final DSNMailSender retVal = new DSNMailSender();
+		final StreamsDSNMailSenderSource source = new StreamsDSNMailSenderSource(bridge);
+		
+		// make sure the SMTP Gateway is not enabled
+		if (env.getProperty("direct.msgmonitor.dsnSender.useSMTPGatewaySender", "false").compareToIgnoreCase("true") == 0)
+			throw new IllegalStateException("UseStreams and useSMTPGateway cannot both be set to true");
+		
+		final StreamsDSNMailSender retVal = new StreamsDSNMailSender(source);
+
+		return retVal;
+
+	}
+	
+	@Bean("dsnSender")
+	@ConditionalOnMissingBean
+	@ConditionalOnProperty(name="direct.msgmonitor.dsnSender.useSMTPGatewaySender", havingValue="true")
+	public DSNMailSender smtpDsnSender(Environment env)
+	{
+		// make sure the SMTP Gateway is not enabled
+		if (env.getProperty("direct.msgmonitor.dsnSender.useStreamsSender", "false").compareToIgnoreCase("true") == 0)
+			throw new IllegalStateException("UseStreams and useSMTPGateway cannot both be set to true");
+		
+		final SMTPDSNMailSender retVal = new SMTPDSNMailSender();
 		retVal.setGatewayURL(gatewayURL);
 		retVal.setSMTPClientFactory(smtpClientFactory());
 		return retVal;

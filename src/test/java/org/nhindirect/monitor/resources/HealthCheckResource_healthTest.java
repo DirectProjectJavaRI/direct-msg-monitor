@@ -1,20 +1,16 @@
 package org.nhindirect.monitor.resources;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Collection;
 import java.util.Collections;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.monitor.BaseTestPlan;
 import org.nhindirect.monitor.SpringBaseTest;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
 
 
 public class HealthCheckResource_healthTest extends SpringBaseTest
@@ -37,11 +33,10 @@ public class HealthCheckResource_healthTest extends SpringBaseTest
 		@Override
 		protected void performInner() throws Exception
 		{
-			final ResponseEntity<String> resp = testRestTemplate.exchange("/health", HttpMethod.GET, null, String.class);
-			if (resp.getStatusCodeValue() != 200)
-				throw new HttpClientErrorException(resp.getStatusCode());
+			final String html = webClient.get().uri("/health").retrieve()
+					.bodyToMono(String.class).block();
 
-			doAssertions(resp.getBody());
+			doAssertions(html);
 		}
 		
 		

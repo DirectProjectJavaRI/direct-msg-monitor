@@ -1,6 +1,6 @@
 package org.nhindirect.monitor.aggregator.repository;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -8,8 +8,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.junit.Test;
-import org.nhindirect.monitor.aggregator.repository.ConcurrentJPAAggregationRepository;
+import org.junit.jupiter.api.Test;
 import org.nhindirect.monitor.repository.AggregationCompletedRepository;
 import org.nhindirect.monitor.repository.AggregationRepository;
 

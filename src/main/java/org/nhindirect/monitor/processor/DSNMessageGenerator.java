@@ -22,6 +22,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 package org.nhindirect.monitor.processor;
 	
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -195,11 +196,9 @@ public class DSNMessageGenerator
      * @return
      */
     ///CLOVER:OFF
-    @SuppressWarnings({ "unchecked", "deprecation" })
 	protected Enumeration<Header> convertStringToHeaders(String asString)
-    {
-    	final InputStream str = IOUtils.toInputStream(asString);	
-    	try
+    {	
+    	try(final InputStream str = IOUtils.toInputStream(asString, Charset.defaultCharset()))
     	{
     	   	InternetHeaders headers = new InternetHeaders(str);
     	
@@ -208,10 +207,6 @@ public class DSNMessageGenerator
     	catch (Exception e)
     	{
     		// log warning
-    	}
-    	finally
-    	{
-        	IOUtils.closeQuietly(str);    		
     	}
     	
     	return null;

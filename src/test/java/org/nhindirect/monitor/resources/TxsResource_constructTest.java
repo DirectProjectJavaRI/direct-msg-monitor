@@ -1,12 +1,12 @@
 package org.nhindirect.monitor.resources;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import static org.mockito.Mockito.mock;
 
 import org.apache.camel.ProducerTemplate;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.nhindirect.monitor.processor.DuplicateNotificationStateManager;
 
 public class TxsResource_constructTest 

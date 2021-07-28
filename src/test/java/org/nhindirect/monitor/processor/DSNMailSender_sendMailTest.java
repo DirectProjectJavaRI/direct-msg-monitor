@@ -7,7 +7,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.never;
 import static org.mockito.ArgumentMatchers.any;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -18,7 +20,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultExchange;
 import org.apache.commons.net.smtp.SMTPClient;
-import org.junit.Test;
 import org.nhindirect.monitor.util.TestUtils;
 
 
@@ -51,7 +52,7 @@ public class DSNMailSender_sendMailTest
 		
 		final SMTPClientFactory factory = createFactory(client);
 		
-		DSNMailSender sender = new DSNMailSender("smtp://localhost", factory);
+		DSNMailSender sender = new SMTPDSNMailSender("smtp://localhost", factory);
 		
 		Exchange exchange = new DefaultExchange(mock(CamelContext.class));
 		exchange.getIn().setBody(msg);
@@ -66,7 +67,7 @@ public class DSNMailSender_sendMailTest
 	{
 
 		Exchange exchange = new DefaultExchange(mock(CamelContext.class));
-		DSNMailSender sender = new DSNMailSender();
+		DSNMailSender sender = new SMTPDSNMailSender();
 		
 		boolean exceptionOccurred = false;
 		
@@ -87,7 +88,7 @@ public class DSNMailSender_sendMailTest
 	{
 
 		Exchange exchange = new DefaultExchange(mock(CamelContext.class));
-		DSNMailSender sender = new DSNMailSender("", null);
+		DSNMailSender sender = new SMTPDSNMailSender("", null);
 		
 		boolean exceptionOccurred = false;
 		
@@ -108,7 +109,7 @@ public class DSNMailSender_sendMailTest
 	{
 
 		Exchange exchange = new DefaultExchange(mock(CamelContext.class));
-		DSNMailSender sender = new DSNMailSender("smtp://localhost", null);
+		DSNMailSender sender = new SMTPDSNMailSender("smtp://localhost", null);
 		
 		boolean exceptionOccurred = false;
 		
@@ -137,7 +138,7 @@ public class DSNMailSender_sendMailTest
 		
 		final SMTPClientFactory factory = createFactory(client);
 		
-		DSNMailSender sender = new DSNMailSender("smtp://localhost", factory);
+		DSNMailSender sender = new SMTPDSNMailSender("smtp://localhost", factory);
 		
 		Exchange exchange = new DefaultExchange(mock(CamelContext.class));
 		exchange.getIn().setBody(msg);
@@ -170,7 +171,7 @@ public class DSNMailSender_sendMailTest
 		
 		final SMTPClientFactory factory = createFactory(client);
 		
-		DSNMailSender sender = new DSNMailSender("smtp://localhost", factory);
+		DSNMailSender sender = new SMTPDSNMailSender("smtp://localhost", factory);
 		
 		Exchange exchange = new DefaultExchange(mock(CamelContext.class));
 		exchange.getIn().setBody(msg);
@@ -204,7 +205,7 @@ public class DSNMailSender_sendMailTest
 		
 		final SMTPClientFactory factory = createFactory(client);
 		
-		DSNMailSender sender = new DSNMailSender("smtp://localhost", factory);
+		DSNMailSender sender = new SMTPDSNMailSender("smtp://localhost", factory);
 		
 		Exchange exchange = new DefaultExchange(mock(CamelContext.class));
 		exchange.getIn().setBody(msg);
@@ -239,7 +240,7 @@ public class DSNMailSender_sendMailTest
 		
 		final SMTPClientFactory factory = createFactory(client);
 		
-		DSNMailSender sender = new DSNMailSender("smtp://localhost", factory);
+		DSNMailSender sender = new SMTPDSNMailSender("smtp://localhost", factory);
 		
 		Exchange exchange = new DefaultExchange(mock(CamelContext.class));
 		exchange.getIn().setBody(msg);

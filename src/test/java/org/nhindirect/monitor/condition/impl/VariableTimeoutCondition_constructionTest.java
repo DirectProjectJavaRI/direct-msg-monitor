@@ -1,10 +1,11 @@
 package org.nhindirect.monitor.condition.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.mockito.Mockito.mock;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.nhindirect.monitor.condition.TxTimeoutCondition;
 
 public class VariableTimeoutCondition_constructionTest 

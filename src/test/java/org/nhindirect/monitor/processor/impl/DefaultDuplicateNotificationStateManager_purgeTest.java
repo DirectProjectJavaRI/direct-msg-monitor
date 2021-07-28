@@ -1,7 +1,8 @@
 package org.nhindirect.monitor.processor.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -12,9 +13,10 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.UUID;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.nhindirect.monitor.TestApplication;
 import org.nhindirect.monitor.entity.ReceivedNotification;
 import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
@@ -22,11 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @DataJpaTest
 @Transactional
 @ContextConfiguration(classes=TestApplication.class)
@@ -36,7 +37,7 @@ public class DefaultDuplicateNotificationStateManager_purgeTest
 	@Autowired
 	private ReceivedNotificationRepository recRepo;
 	
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception
 	{
 		Calendar qualTime = Calendar.getInstance(Locale.getDefault());
@@ -121,17 +122,18 @@ public class DefaultDuplicateNotificationStateManager_purgeTest
 		assertEquals(0, addresses.size());	
 	}	
 	
-	@Test(expected=RuntimeException.class)
 	public void testPurgeNotification_daoError_assertException() throws Exception
 	{
-		DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
-		
-		ReceivedNotificationRepository spyDao = mock(ReceivedNotificationRepository.class);
-		doThrow(new RuntimeException("")).when(spyDao).deleteByReceivedTimeBefore((Calendar)any());
-		mgr.setReceivedNotificationRepository(spyDao);
-		
-		mgr.purge();
-		
+		Assertions.assertThrows(RuntimeException.class, () ->
+		{
+			DefaultDuplicateNotificationStateManager mgr = new DefaultDuplicateNotificationStateManager();
+			
+			ReceivedNotificationRepository spyDao = mock(ReceivedNotificationRepository.class);
+			doThrow(new RuntimeException("")).when(spyDao).deleteByReceivedTimeBefore((Calendar)any());
+			mgr.setReceivedNotificationRepository(spyDao);
+			
+			mgr.purge();
+		});
 		
 	}	
 }

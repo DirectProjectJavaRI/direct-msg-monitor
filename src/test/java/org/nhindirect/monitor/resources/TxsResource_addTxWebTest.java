@@ -1,17 +1,17 @@
 package org.nhindirect.monitor.resources;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
 import org.nhindirect.monitor.BaseTestPlan;
@@ -19,10 +19,6 @@ import org.nhindirect.monitor.SpringBaseTest;
 import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
 
 
 public class TxsResource_addTxWebTest extends SpringBaseTest
@@ -70,11 +66,9 @@ public class TxsResource_addTxWebTest extends SpringBaseTest
 			if (txs != null)
 				txs.forEach(tx -> 
 			    {
-			    	HttpEntity<Tx> requestEntity = new HttpEntity<>(tx);
-			    	final ResponseEntity<Void> resp = testRestTemplate.exchange("/txs", HttpMethod.POST, requestEntity, Void.class);
-			    	
-					if (resp.getStatusCodeValue() != 201)
-						throw new HttpClientErrorException(resp.getStatusCode());	
+			    	webClient.post().uri("/txs")
+			    			.bodyValue(tx).retrieve().bodyToMono(Void.class).block(); 
+
 			    });
 
 			doAssertions(mockEndpoint);

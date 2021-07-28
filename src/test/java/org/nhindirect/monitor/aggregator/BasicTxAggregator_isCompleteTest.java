@@ -3,15 +3,17 @@ package org.nhindirect.monitor.aggregator;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
-import org.junit.Test;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.monitor.condition.TxCompletionCondition;
 

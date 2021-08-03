@@ -1,7 +1,10 @@
 package org.nhindirect.monitor.aggregator;
 
 import static org.mockito.Mockito.mock;
-import static org.junit.Assert.assertEquals;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,7 +12,7 @@ import java.util.Collection;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultExchange;
-import org.junit.Test;
+
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.monitor.condition.TxCompletionCondition;
 import org.nhindirect.monitor.condition.TxTimeoutCondition;

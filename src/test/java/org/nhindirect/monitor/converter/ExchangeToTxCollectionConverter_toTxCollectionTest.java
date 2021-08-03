@@ -1,7 +1,7 @@
 package org.nhindirect.monitor.converter;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,7 +9,7 @@ import java.util.Collection;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultExchange;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.nhindirect.common.tx.model.Tx;
 
 public class ExchangeToTxCollectionConverter_toTxCollectionTest 

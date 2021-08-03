@@ -1,0 +1,23 @@
+spring:
+  cloud:
+    stream:
+      # Need to define an explicit source binding name since we are using a StreamBridge
+      source: direct-smtp-gateway-message  
+          
+      function:
+        definition: directTxMonitoring
+
+      bindings:
+      
+        direct-smtp-gateway-message-out-0:
+          destination: direct-smtp-mq-gateway      
+      
+        directTxMonitoring-in-0:
+          destination: direct-tx-monitoring
+          group: direct-tx-monitoring-stream-group
+          consumer:
+            concurrency: 10       
+            maxAttempts: 5
+            backOffInitialInterval: 30000
+            backOffMaxInterval: 120000
+            

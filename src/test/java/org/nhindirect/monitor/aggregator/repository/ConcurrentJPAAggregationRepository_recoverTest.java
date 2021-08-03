@@ -4,38 +4,34 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultExchange;
-import org.apache.camel.test.spring.CamelSpringBootRunner;
-import org.apache.camel.test.spring.CamelSpringTestSupport;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxDetailType;
 import org.nhindirect.common.tx.model.TxMessageType;
-import org.nhindirect.monitor.TestApplication;
-import org.nhindirect.monitor.aggregator.repository.ConcurrentJPAAggregationRepository;
+import org.nhindirect.monitor.SpringBaseTest;
 import org.nhindirect.monitor.repository.AggregationCompletedRepository;
 import org.nhindirect.monitor.repository.AggregationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.support.AbstractXmlApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 
 import org.nhindirect.monitor.util.TestUtils;
 
-@RunWith(CamelSpringBootRunner.class)
-@ContextConfiguration(classes=TestApplication.class)
-@DirtiesContext
 @ActiveProfiles("producerMock")
-public class ConcurrentJPAAggregationRepository_recoverTest extends CamelSpringTestSupport 
+public class ConcurrentJPAAggregationRepository_recoverTest extends SpringBaseTest 
 {
 	@Autowired
 	private AggregationRepository aggRepo;
@@ -43,8 +39,11 @@ public class ConcurrentJPAAggregationRepository_recoverTest extends CamelSpringT
 	@Autowired
 	private AggregationCompletedRepository aggCompRepo;
 	
-	@Before
-	public void setUp() throws Exception
+	@Autowired
+	private CamelContext context;
+	
+	@BeforeEach
+	public void setUp()
 	{
 		super.setUp();
 		
@@ -134,10 +133,4 @@ public class ConcurrentJPAAggregationRepository_recoverTest extends CamelSpringT
 		
 		assertTrue(exceptionOccured);
 	}	
-	
-    @Override
-    protected AbstractXmlApplicationContext createApplicationContext() 
-    {
-    	return new ClassPathXmlApplicationContext("distributedAggregatorRoutes/mock-route.xml");
-    }
 }

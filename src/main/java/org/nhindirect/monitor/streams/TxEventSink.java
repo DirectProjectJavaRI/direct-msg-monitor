@@ -22,17 +22,20 @@ THE POSSIBILITY OF SUCH DAMAGE.
 package org.nhindirect.monitor.streams;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 import org.apache.camel.ProducerTemplate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.nhindirect.common.tx.model.Tx;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.annotation.EnableBinding;
-import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Spring data streams Sink for TxEvents.  This class reads Tx messages from the event stream and submits them to the
@@ -40,11 +43,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Greg Meyer
  * @Since 2.0
  */
-@EnableBinding(TxInput.class)
+@Configuration
+@Slf4j
+@Profile("streams")
 public class TxEventSink
 {
-	@SuppressWarnings("deprecation")
-	private static final Log LOGGER = LogFactory.getFactory().getInstance(TxEventSink.class);
 	
     @Autowired
 	protected ObjectMapper objectMapper;
@@ -61,30 +64,40 @@ public class TxEventSink
 		this.template = template;
 	}
     
-	@StreamListener(target = TxInput.TX_INPUT)
-	public void addTx(String txMarshalled) throws ClassNotFoundException, JsonParseException, JsonMappingException, IOException 
+	@Bean
+	public Consumer<String> directTxMonitoring() throws ClassNotFoundException, JsonParseException, JsonMappingException, IOException 
 	{
-    	///CLOVER:OFF
-    	if (LOGGER.isTraceEnabled())
-    		LOGGER.trace("Attempting to add Tx");
-    	///CLOVER:ON	
-		
-		final Tx tx = objectMapper.readValue(txMarshalled, Tx.class);
-		
-    	if (template == null)
-    		throw new IllegalStateException("Template producer cannot be null.  Please examine the txs resource configuration");
-    	
-    	try
-    	{
-    		template.sendBody(tx);
-    	}
-    	catch (Throwable t)
-    	{
-    		LOGGER.error("Failed to add Tx message", t);
-    	}
-    	
-    	///CLOVER:OFF
-    	if (LOGGER.isTraceEnabled())
-    		LOGGER.trace("Tx added");		
+		return txMarshalled ->
+		{
+			try
+			{
+		    	///CLOVER:OFF
+		    	if (log.isTraceEnabled())
+		    		log.trace("Attempting to add Tx");
+		    	///CLOVER:ON	
+				
+				final Tx tx = objectMapper.readValue(txMarshalled, Tx.class);
+				
+		    	if (template == null)
+		    		throw new IllegalStateException("Template producer cannot be null.  Please examine the txs resource configuration");
+		    	
+		    	try
+		    	{
+		    		template.sendBody(tx);
+		    	}
+		    	catch (Throwable t)
+		    	{
+		    		log.error("Failed to add Tx message", t);
+		    	}
+		    	
+		    	///CLOVER:OFF
+		    	if (log.isTraceEnabled())
+		    		log.trace("Tx added");	
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		};
 	}
 }

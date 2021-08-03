@@ -1,17 +1,17 @@
 package org.nhindirect.monitor.processor;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class DSNMailSender_constructorTest 
 {
 	@Test
 	public void testContrust_defaultConstructor()
 	{
-		DSNMailSender sender = new DSNMailSender();
+		SMTPDSNMailSender sender = new SMTPDSNMailSender();
 		
 		assertNull(sender.gatewayHost);
 		assertNull(sender.clientFactory);
@@ -23,7 +23,7 @@ public class DSNMailSender_constructorTest
 	{
 		SMTPClientFactory factory = new SMTPClientFactory();
 		
-		DSNMailSender sender = new DSNMailSender("smtp://localhost", factory);
+		SMTPDSNMailSender sender = new SMTPDSNMailSender("smtp://localhost", factory);
 		
 		assertEquals("localhost", sender.gatewayHost);
 		assertEquals(factory, sender.clientFactory);
@@ -35,7 +35,7 @@ public class DSNMailSender_constructorTest
 	{
 		SMTPClientFactory factory = new SMTPClientFactory();
 		
-		DSNMailSender sender = new DSNMailSender("smtp://localhost:10026", factory);
+		SMTPDSNMailSender sender = new SMTPDSNMailSender("smtp://localhost:10026", factory);
 		
 		assertEquals("localhost", sender.gatewayHost);
 		assertEquals(factory, sender.clientFactory);
@@ -51,7 +51,7 @@ public class DSNMailSender_constructorTest
 		
 		try
 		{
-			new DSNMailSender("smtpewdf://localhost\\:10026", factory);
+			new SMTPDSNMailSender("smtpewdf://localhost\\:10026", factory);
 		}
 		catch (IllegalArgumentException e)
 		{

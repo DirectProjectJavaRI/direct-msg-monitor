@@ -1,47 +1,60 @@
 package org.nhindirect.monitor.distributedaggregatorroute;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.spring.CamelSpringTestSupport;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
+import org.nhindirect.monitor.SpringBaseTest;
 import org.nhindirect.monitor.repository.AggregationCompletedRepository;
 import org.nhindirect.monitor.repository.AggregationRepository;
 import org.nhindirect.monitor.util.TestUtils;
-import org.springframework.context.support.AbstractXmlApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.TestPropertySource;
 
-public class TestFailedAddUpdateExchangeMonitorRoute extends CamelSpringTestSupport 
+@TestPropertySource(properties = "camel.springboot.xmlRoutes=classpath:distributedAggregatorRoutes/monitor-route-to-mock-addupdate-error.xml")
+public class TestFailedAddUpdateExchangeMonitorRoute extends SpringBaseTest 
 {
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public void postProcessTest() throws Exception
+	@Autowired
+	protected CamelContext context;
+	
+	@Autowired
+	private AggregationRepository aggRepo;
+	
+	@Autowired
+	private AggregationCompletedRepository aggCompRepo;
+	
+	protected MockEndpoint mock;
+	
+	protected ProducerTemplate template;
+	
+	@BeforeEach
+	public void setUp()
 	{
-		super.postProcessTest();
-		
-		final AggregationRepository aggRepo = context.getRegistry().lookupByType(AggregationRepository.class).values().iterator().next();
-		final AggregationCompletedRepository aggCompRepo = context.getRegistry().lookupByType(AggregationCompletedRepository.class).values().iterator().next();
+		super.setUp();
 		
 		aggRepo.deleteAll();
 		aggCompRepo.deleteAll();
 		
-		assertEquals(0,aggRepo.findAllKeys().size());
-		assertEquals(0,aggCompRepo.findAllKeys().size());
+		mock = (MockEndpoint)context.getEndpoint("mock:result");
+		mock.reset();
+		
+		template = context.createProducerTemplate();
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Test
     public void testSingleRecipMDNReceived_assertConditionComplete() throws Exception 
     {
-
-		MockEndpoint mock = getMockEndpoint("mock:result");
-
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -72,10 +85,6 @@ public class TestFailedAddUpdateExchangeMonitorRoute extends CamelSpringTestSupp
 	@Test
     public void testSingleRecipNoMDNReceived_assertConditionNotComplete() throws Exception 
     {
-
-		MockEndpoint mock = getMockEndpoint("mock:result");
-
-
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();
 
@@ -85,11 +94,5 @@ public class TestFailedAddUpdateExchangeMonitorRoute extends CamelSpringTestSupp
 		List<Exchange> exchanges = mock.getReceivedExchanges();
 		
 		assertEquals(0, exchanges.size());
-    }
-	
-    @Override
-    protected AbstractXmlApplicationContext createApplicationContext() 
-    {
-    	return new ClassPathXmlApplicationContext("distributedAggregatorRoutes/monitor-route-to-mock-addupdate-error.xml");
     }
 }

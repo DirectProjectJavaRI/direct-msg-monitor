@@ -1,44 +1,62 @@
 package org.nhindirect.monitor.route;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.spring.CamelSpringTestSupport;
-import org.apache.camel.test.spring.CamelSpringBootRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.nhindirect.common.mail.MDNStandard;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
-import org.nhindirect.monitor.TestApplication;
+import org.nhindirect.monitor.SpringBaseTest;
+import org.nhindirect.monitor.repository.AggregationCompletedRepository;
+import org.nhindirect.monitor.repository.AggregationRepository;
 import org.nhindirect.monitor.util.TestUtils;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.support.AbstractXmlApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.TestPropertySource;
 
-@RunWith(CamelSpringBootRunner.class)
-@DataJpaTest
-@Transactional
-@ContextConfiguration(classes=TestApplication.class)
-@DirtiesContext
+@TestPropertySource(locations="classpath:properties/shorttimeout.properties", 
+properties = "camel.springboot.xmlRoutes=classpath:routes/monitor-route-to-mock-with-complete-filter.xml")
 @ActiveProfiles("producerMock")
-public class TestFilterNonCompletedExchangesMonitorRoute extends CamelSpringTestSupport 
+public class TestFilterNonCompletedExchangesMonitorRoute extends SpringBaseTest 
 {
-	static
+	@Autowired
+	protected CamelContext context;
+	
+	@Autowired
+	private AggregationRepository aggRepo;
+	
+	@Autowired
+	private AggregationCompletedRepository aggCompRepo;
+	
+	protected MockEndpoint mock;
+	
+	protected ProducerTemplate template;
+	
+	@BeforeEach
+	public void setUp()
 	{
+		super.setUp();
 		
+		aggRepo.deleteAll();
+		aggCompRepo.deleteAll();
+		
+		mock = (MockEndpoint)context.getEndpoint("mock:result");
+		mock.reset();
+		
+		template = context.createProducerTemplate();
 	}
 	
 	@Test
 	public void testTimeoutReliableMessage_conditionNotComplete_assertFilteredOut() throws Exception
 	{
-		MockEndpoint mock = getMockEndpoint("mock:result");
 
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
@@ -59,8 +77,6 @@ public class TestFilterNonCompletedExchangesMonitorRoute extends CamelSpringTest
 	@Test
 	public void testTimeoutReliableMessage_conditionComplete_assertMessageMovedForware() throws Exception
 	{
-		MockEndpoint mock = getMockEndpoint("mock:result");
-
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -83,10 +99,4 @@ public class TestFilterNonCompletedExchangesMonitorRoute extends CamelSpringTest
 		assertEquals(1, exchanges.size());
 		
 	}
-	
-    @Override
-    protected AbstractXmlApplicationContext createApplicationContext() 
-    {
-    	return new ClassPathXmlApplicationContext("routes/monitor-route-to-mock-with-complete-filter.xml");
-    }
 }

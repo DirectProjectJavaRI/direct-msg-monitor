@@ -2,10 +2,12 @@ package org.nhindirect.monitor.processor;
 
 import static org.mockito.Mockito.mock;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -20,7 +22,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultExchange;
 import org.apache.commons.io.IOUtils;
-import org.junit.Test;
 import org.nhindirect.common.mail.MailStandard;
 import org.nhindirect.common.mail.dsn.DSNFailureTextBodyPartGenerator;
 import org.nhindirect.common.mail.dsn.DSNGenerator;

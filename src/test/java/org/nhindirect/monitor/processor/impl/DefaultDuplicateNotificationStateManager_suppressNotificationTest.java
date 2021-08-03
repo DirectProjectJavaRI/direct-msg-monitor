@@ -1,7 +1,8 @@
 package org.nhindirect.monitor.processor.impl;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -10,10 +11,9 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.camel.test.spring.CamelSpringBootRunner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.nhindirect.common.mail.MDNStandard;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
@@ -26,9 +26,10 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-@RunWith(CamelSpringBootRunner.class)
+@ExtendWith(SpringExtension.class)
 @DataJpaTest
 @Transactional
 @ContextConfiguration(classes=TestApplication.class)
@@ -40,7 +41,7 @@ public class DefaultDuplicateNotificationStateManager_suppressNotificationTest
 	@Autowired
 	private ReceivedNotificationRepository recRepo;
 	
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception
 	{
 		Calendar qualTime = Calendar.getInstance(Locale.getDefault());

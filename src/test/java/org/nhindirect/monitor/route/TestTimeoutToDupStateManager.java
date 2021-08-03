@@ -1,8 +1,8 @@
 package org.nhindirect.monitor.route;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.Calendar;
@@ -17,7 +17,7 @@ import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
 import org.nhindirect.monitor.SpringBaseTest;
@@ -133,11 +133,4 @@ public class TestTimeoutToDupStateManager extends SpringBaseTest
 		assertEquals(0, addresses.size());
 	}	
 	
-	/*
-    @Override
-    protected AbstractXmlApplicationContext createApplicationContext() 
-    {
-    	return new ClassPathXmlApplicationContext("routes/monitor-route-to-timeout-dupstate-manager.xml");
-    }
-    */
 }

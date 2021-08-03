@@ -1,10 +1,10 @@
 package org.nhindirect.monitor.condition.impl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.nhindirect.common.tx.model.Tx;
 
 public class DecayingTimeoutCondition_getTimeoutTest 

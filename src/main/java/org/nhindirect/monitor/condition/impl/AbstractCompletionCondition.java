@@ -41,7 +41,7 @@ import org.nhindirect.monitor.condition.TxCompletionCondition;
 public abstract class AbstractCompletionCondition implements TxCompletionCondition
 {
 	/**
-	 * Determines the orginial message that is being tracked.
+	 * Determines the original message that is being tracked.
 	 * @param txs Collection of aggregated messages that have been correlated together.
 	 * @return The {@link Tx} object corresponding to the original message that is being tracked.  Returns
 	 * null if the original message has not yet been added to the correlated collection.
@@ -59,7 +59,7 @@ public abstract class AbstractCompletionCondition implements TxCompletionConditi
 	}
 	
 	/**
-	 * Determines the orginial message that is being tracked.
+	 * Determines the original message that is being tracked.
 	 * @param txs Collection of aggregated messages that have been correlated together.
 	 * @return The {@link Tx} object corresponding to the original message that is being tracked.  Returns
 	 * null if the original message has not yet been added to the correlated collection.

@@ -31,14 +31,17 @@ import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxDetail;
 import org.nhindirect.common.tx.model.TxDetailType;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * A general case completion condition implementation.  This completion condition only checks for the existence
  * of the original message, and either an MDN or DNS message corresponding to the original message.  The condition takes
  * into consideration that an MDN or DNS message must be present for all recipients of the original message for the condition to be
  * considered complete.
- * @author Greg Meyuer
+ * @author Greg Meyer
  * @since 1.0
  */
+@Slf4j
 public class GeneralCompletionCondition extends AbstractCompletionCondition
 {
 
@@ -76,10 +79,15 @@ public class GeneralCompletionCondition extends AbstractCompletionCondition
 				   {
 					   // an MDN is sent per original message recipient, so we should only be able
 					   // to extract one original recipient from this message
-					   final RecipientResponseStatus recipStatus = recipStatuses.get(normalizeFinalRecip(finalRecipDetail.getDetailValue().trim()));
+					   String normalizedFinalRecip = normalizeFinalRecip(finalRecipDetail.getDetailValue().trim());
+					   final RecipientResponseStatus recipStatus = recipStatuses.get(normalizedFinalRecip);
 					   if (recipStatus != null)
 						   recipStatus.addReceivedStatus(RecipientResponseStatus.MDNReceived);
-
+					   else
+							log.warn(
+									"The final recipient '{}' on the MDN with message ID '{}' does not correspond to one of the recipients of the original message with message ID '{}'",
+									normalizedFinalRecip, tx.getDetail(TxDetailType.MSG_ID).getDetailValue(),
+									originalMessage.getDetail(TxDetailType.MSG_ID).getDetailValue());
 					   break;
 				   }
 				   case DSN:
@@ -88,9 +96,15 @@ public class GeneralCompletionCondition extends AbstractCompletionCondition
 					   // need to split the recipients out
 					   for (String finalRecip : finalRecipDetail.getDetailValue().split(","))
 					   {
-						   final RecipientResponseStatus recipStatus = recipStatuses.get(normalizeFinalRecip(finalRecip.trim()));
+						   String normalizedFinalRecip = normalizeFinalRecip(finalRecip.trim());
+						   final RecipientResponseStatus recipStatus = recipStatuses.get(normalizedFinalRecip);
 						   if (recipStatus != null)
 							   recipStatus.addReceivedStatus(RecipientResponseStatus.DSNReceived);
+						   else
+								log.warn(
+										"The final recipient '{}' on the DSN with message ID '{}' does not correspond to one of the recipients of the original message with message ID '{}'",
+										normalizedFinalRecip, tx.getDetail(TxDetailType.MSG_ID).getDetailValue(),
+										originalMessage.getDetail(TxDetailType.MSG_ID).getDetailValue());
 					   }
 					   break;
 				   }

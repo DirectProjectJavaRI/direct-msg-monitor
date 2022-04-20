@@ -35,12 +35,15 @@ import org.nhindirect.common.tx.model.TxDetailType;
 import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
 import org.nhindirect.monitor.repository.RepositoryBiz;
 
+import lombok.extern.slf4j.Slf4j;
+
 
 /**
  * A completion condition that implements the timely and reliable messaging for Direct specification.
  * @author Greg Meyer
  * @since 1.0
  */
+@Slf4j
 public class TimelyAndReliableCompletionCondition extends AbstractCompletionCondition
 {	
 	protected ReceivedNotificationRepository recRepo;
@@ -87,7 +90,14 @@ public class TimelyAndReliableCompletionCondition extends AbstractCompletionCond
 				   {
 					   // an MDN is sent per original message recipient, so we should only be able
 					   // to extract one original recipient from this message
-					   final RecipientResponseStatus recipStatus = recipStatuses.get(normalizeFinalRecip(finalRecipDetail.getDetailValue().trim()));
+					   String normalizedFinalRecip = normalizeFinalRecip(finalRecipDetail.getDetailValue().trim());
+					   final RecipientResponseStatus recipStatus = recipStatuses.get(normalizedFinalRecip);
+					   if (recipStatus == null) {
+							log.warn(
+									"The final recipient '{}' on the MDN with message ID '{}' does not correspond to one of the recipients of the original message with message ID '{}'",
+									normalizedFinalRecip, tx.getDetail(TxDetailType.MSG_ID).getDetailValue(),
+									originalMessage.getDetail(TxDetailType.MSG_ID).getDetailValue());
+					   }
 					   final TxDetail dispDetail = tx.getDetail(TxDetailType.DISPOSITION);
 					   if (dispDetail != null && recipStatus != null)
 					   {	
@@ -120,12 +130,19 @@ public class TimelyAndReliableCompletionCondition extends AbstractCompletionCond
 						   final String actionValue = actionDetail.getDetailValue();
 						   if (actionValue.contains(DSNStandard.DSNAction.FAILED.toString()))
 						   {
-							   // there can be multiple final recipients in a DNS message
+							   // there can be multiple final recipients in a DSN message
 							   for (String finalRecip : finalRecipDetail.getDetailValue().split(","))
 							   {
-								   final RecipientResponseStatus recipStatus = recipStatuses.get(normalizeFinalRecip(finalRecip.trim()));
+								   String normalizedFinalRecip = normalizeFinalRecip(finalRecip.trim());
+								   final RecipientResponseStatus recipStatus = recipStatuses.get(normalizedFinalRecip);
 								   if (recipStatus != null)
 									   recipStatus.addReceivedStatus(RecipientResponseStatus.DSNFailedReceived);
+								   else
+										log.warn(
+												"The final recipient '{}' on the DSN with message ID '{}' does not correspond to one of the recipients of the original message with message ID '{}'",
+												normalizedFinalRecip,
+												tx.getDetail(TxDetailType.MSG_ID).getDetailValue(),
+												originalMessage.getDetail(TxDetailType.MSG_ID).getDetailValue());
 							   }
 						   }
 					   }   
@@ -143,7 +160,7 @@ public class TimelyAndReliableCompletionCondition extends AbstractCompletionCond
 					(status.isMDNFailedReceived() || status.isDSNFailedReceived())))  // did we receive an MDN or DSN failure
 			{
 				// if at least one of the conditions above is not true (that being why the entire statement is 
-				// precceeded with a !, then that recipeint is not complete
+				// preceded with a !, then that recipient is not complete
 				// the completion condition of the original message is not considered complete until all recipients
 				// have been accounted for
 				retVal.add(status.getRecipient());

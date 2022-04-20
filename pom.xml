@@ -309,18 +309,14 @@
                   <index>true</index>
                </archive>
             </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>test-jar</goal>
+                </goals>
+              </execution>
+            </executions>
          </plugin>
-         <plugin>
-       <groupId>org.apache.maven.plugins</groupId>
-       <artifactId>maven-jar-plugin</artifactId>
-       <executions>
-         <execution>
-           <goals>
-             <goal>test-jar</goal>
-           </goals>
-         </execution>
-       </executions>
-     </plugin>
 
 	     <plugin>
 	      	<groupId>org.apache.maven.plugins</groupId> 
@@ -333,7 +329,8 @@
 				<detectJavaApiLink>true</detectJavaApiLink>
 				<detectLinks>true</detectLinks>
 				<source>1.8</source>
-				<show>public</show>          	          
+				<show>public</show>
+				<doclint>none</doclint>
 	        </configuration>
 	        <executions>
 	            <execution>
@@ -342,9 +339,6 @@
 	                <goals>
 	                  <goal>jar</goal>
 	                </goals>
-                    <configuration> 
-                        <additionalparam>-Xdoclint:none</additionalparam>
-                    </configuration>	                
 	            </execution>
 	        </executions>		        
 	     </plugin>  

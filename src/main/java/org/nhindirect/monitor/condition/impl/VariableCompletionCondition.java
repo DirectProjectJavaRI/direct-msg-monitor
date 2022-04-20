@@ -59,7 +59,7 @@ public class VariableCompletionCondition extends AbstractCompletionCondition
 
 	/**
 	 * {@inheritDoc}
-	 * This specific class calles the appropriate completion condition based on the results of the {@link #isRelAndTimelyRequired(Tx)} method.
+	 * This specific class calls the appropriate completion condition based on the results of the {@link #isRelAndTimelyRequired(Tx)} method.
 	 */
 	@Override
 	public boolean isComplete(Collection<Tx> txs) 

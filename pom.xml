@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>direct-msg-monitor</artifactId>    
     <name>Direct Project message monitor</name>
-    <version>8.1.0-SNAPSHOT</version>
+    <version>8.1.0</version>
     <description>Direct Project message monitor for timely and reliable messaging</description>
     <inceptionYear>2010</inceptionYear>
     <url>http://api.nhindirect.org/x/www/api.nhindirect.org/java/site/direct-msg-monitor/${project.version}</url> 
@@ -104,12 +104,12 @@
 		<dependency>
 			<groupId>org.nhind</groupId>
 			<artifactId>direct-common</artifactId>
-			<version>8.1.0-SNAPSHOT</version>		
+			<version>8.1.0</version>		
 		</dependency>  
 		<dependency>
 			<groupId>org.nhind</groupId>
 			<artifactId>direct-msg-monitor-model</artifactId>
-			<version>8.1.0-SNAPSHOT</version>		
+			<version>8.1.0</version>		
 		</dependency> 		    
 		<dependency>
 			<groupId>com.sun.mail</groupId>
@@ -420,23 +420,4 @@
 	        </plugin>	                   
 		</plugins>
   </reporting>
-  <distributionManagement>
-    <site>
-      <id>nhind-site</id>
-      <name>NHIN Direct API publication site</name>
-      <url>sftp://api.nhindirect.org/x/www/api.nhindirect.org/java/site/direct-msg-monitor/${project.version}</url>
-    </site>
-    <snapshotRepository>
-        <id>sonatype-snapshot</id>
-        <name>Sonatype OSS Maven SNAPSHOT Repository</name>
-        <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-        <uniqueVersion>false</uniqueVersion>
-     </snapshotRepository>
-     <repository>
-        <id>sonatype-release</id>
-        <name>Sonatype OSS Maven Release Repositor</name>
-        <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        <uniqueVersion>false</uniqueVersion>
-     </repository>		    
-  </distributionManagement>
 </project>

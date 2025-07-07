@@ -82,7 +82,7 @@ public class TimelyAndReliableCompletionCondition_isCompleteTest
 	}
 	
 	@Test
-	public void testIsComplete_FinalRicipNull_assertFalse()
+	public void testIsComplete_FinalRecipNull_assertFalse()
 	{
 		TimelyAndReliableCompletionCondition condition = new TimelyAndReliableCompletionCondition();
 		

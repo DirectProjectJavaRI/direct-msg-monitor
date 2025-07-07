@@ -30,6 +30,8 @@ import org.nhindirect.common.tx.model.TxDetail;
 import org.nhindirect.common.tx.model.TxDetailType;
 import org.nhindirect.common.tx.model.TxMessageType;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * A correlation expression used by an aggregation EIP that groups {@link Tx} messages together based on certain properties.
  * <br>
@@ -41,6 +43,7 @@ import org.nhindirect.common.tx.model.TxMessageType;
  * @author Greg Meyer
  * @since 1.0
  */
+@Slf4j
 public class MessageIdCorrelationExpression implements Expression
 {
 
@@ -67,16 +70,33 @@ public class MessageIdCorrelationExpression implements Expression
 				case IMF:
 				{
 					final TxDetail msgIdDetail = details.get(TxDetailType.MSG_ID.getType());
-					if (msgIdDetail != null)
+					if (msgIdDetail != null) {
 						retVal = (String) msgIdDetail.getDetailValue().toString();
+
+						TxDetail recipients = tx.getDetail(TxDetailType.RECIPIENTS);
+						log.info("{} message to recipients '{}' with message ID '{}'", msgType,
+								recipients == null ? null : recipients.getDetailValue(), retVal);
+					}
 					break;
 				}
 				case DSN:
 				case MDN:
 				{
 					final TxDetail msgIdDetail = details.get(TxDetailType.PARENT_MSG_ID.getType());
-					if (msgIdDetail != null)
+					if (msgIdDetail != null) {
 						retVal = (String) msgIdDetail.getDetailValue().toString();
+
+						TxDetail finalRecipients = tx.getDetail(TxDetailType.FINAL_RECIPIENTS);
+						TxDetail messageId = tx.getDetail(TxDetailType.MSG_ID);
+						TxDetail disposition = tx.getDetail(TxDetailType.DISPOSITION);
+						log.info("{} message for final recipients '{}' with message ID '{}' and parent message ID '{}'{}",
+								msgType, finalRecipients == null ? null : finalRecipients.getDetailValue(),
+								messageId == null ? null : messageId.getDetailValue(), retVal,
+								msgType == TxMessageType.MDN
+										? " and disposition '"
+												+ (disposition == null ? null : disposition.getDetailValue()) + "'"
+										: "");
+					}
 					break;
 				}
 			    default:

@@ -1,12 +1,8 @@
 package org.nhindirect.monitor.route;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +18,7 @@ import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = "camel.springboot.xmlRoutes=classpath:routes/monitor-route-to-mock.xml")
+@TestPropertySource(properties = "camel.springboot.routes-include-pattern=classpath:routes/monitor-route-to-mock.xml")
 public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest 
 {
 	
@@ -56,6 +52,7 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 	@Test
     public void testMultiRecip_MDNProcessedReceived_assertConditionNotComplete() throws Exception 
     {
+		mock.expectedMessageCount(0);
 
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
@@ -69,15 +66,15 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "gm2552@direct.securehealthemail.com", "", MDNStandard.Disposition_Processed);
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(0, exchanges.size());
+		mock.assertIsSatisfied();
     }	
 	
 	@Test
     public void testMultiRecip_MDNProcessedAndDispatchedReceivedForOneRecip_assertConditionNotComplete() throws Exception 
     {
 
+		mock.expectedMessageCount(0);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -95,15 +92,15 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "gm2552@direct.securehealthemail.com", "", MDNStandard.Disposition_Dispatched);
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(0, exchanges.size());
+		mock.assertIsSatisfied();
     }
 	
 	@Test
     public void testMultiRecip_MDNProcessedAndDispatchedReceivedForOneRecip_ProcessedOnlyForOther_assertConditionNotComplete() throws Exception 
     {
 
+		mock.expectedMessageCount(0);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -126,15 +123,15 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "ah4626@test.com", "", MDNStandard.Disposition_Processed);
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(0, exchanges.size());
+		mock.assertIsSatisfied();
     }
 	
 	@Test
     public void testMultiRecip_MDNProcessedAndDispatchedReceivedForAllRecips_assertConditionComplete() throws Exception 
     {
 
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -162,14 +159,14 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "ah4626@test.com", "", MDNStandard.Disposition_Dispatched);
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }
 	
 	@Test
     public void testMultiRecip_MDNProcessedAndDispatchedReceivedForOneRecip_MDNErrorOnlyForOther_assertConditionComplete() throws Exception 
     {
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -192,14 +189,14 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "ah4626@test.com", "", MDNStandard.Disposition_Error);
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }
 	
 	@Test
     public void testMultiRecip_MDNProcessedAndDispatchedReceivedForOneRecip_MDNDeniedOnlyForOther_assertConditionComplete() throws Exception 
     {
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -222,14 +219,14 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "ah4626@test.com", "", MDNStandard.Disposition_Denied);
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }
 	
 	@Test
     public void testMultiRecip_MDNProcessedAndDispatchedReceivedForOneRecip_DNSFailedForOther_assertConditionComplete() throws Exception 
     {
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -252,15 +249,15 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "ah4626@test.com", DSNStandard.DSNAction.FAILED.toString(), "");
 		template.sendBody("direct:start", dsnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }
 	
 	
 	@Test
     public void testMultiRecip_MDNProcessedForOneRecip_DNSFailedForOther_assertConditionNotComplete() throws Exception 
     {
+		mock.expectedMessageCount(0);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -279,14 +276,14 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "ah4626@test.com", DSNStandard.DSNAction.FAILED.toString(), "");
 		template.sendBody("direct:start", dsnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(0, exchanges.size());
+		mock.assertIsSatisfied();
     }
 	
 	@Test
     public void testMultiRecip_MDNErrorForAllRecips_assertConditionComplete() throws Exception 
     {
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -305,14 +302,14 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "ah4626@test.com", "", MDNStandard.Disposition_Error);
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }
 	
 	@Test
     public void testMultiRecip_DSNFailedForOneRecip_assertConditionNotComplete() throws Exception 
     {
+		mock.expectedMessageCount(0);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -326,14 +323,14 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "ah4626@test.com", DSNStandard.DSNAction.FAILED.toString(), "");
 		template.sendBody("direct:start", dsnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(0, exchanges.size());
+		mock.assertIsSatisfied();
     }
 	
 	@Test
     public void testMultiRecip_DSNFailedForAllRecips_assertConditionComplete() throws Exception 
     {
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -347,8 +344,6 @@ public class TestMultiRecipNonReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "gm2552@direct.securehealthemail.com,ah4626@test.com", DSNStandard.DSNAction.FAILED.toString(), "");
 		template.sendBody("direct:start", dsnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }
 }

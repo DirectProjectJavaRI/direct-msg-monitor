@@ -47,7 +47,7 @@ public class TxResource_suppressNotificationTest
 		TxsResource resource = new TxsResource(null, dupMgr);
 		
 		ResponseEntity<Mono<Boolean>> res = resource.supressNotification(tx);
-		assertEquals(200, res.getStatusCodeValue());
+		assertEquals(200, res.getStatusCode().value());
 		assertFalse((Boolean)res.getBody().block());
 	}
 	
@@ -61,7 +61,7 @@ public class TxResource_suppressNotificationTest
 		TxsResource resource = new TxsResource(null, dupMgr);
 		
 		ResponseEntity<Mono<Boolean>> res = resource.supressNotification(tx);
-		assertEquals(200, res.getStatusCodeValue());
+		assertEquals(200, res.getStatusCode().value());
 		assertTrue((Boolean)res.getBody().block());
 	}
 	
@@ -75,6 +75,6 @@ public class TxResource_suppressNotificationTest
 		TxsResource resource = new TxsResource(null, dupMgr);
 		
 		ResponseEntity<Mono<Boolean>> res = resource.supressNotification(tx);
-		assertEquals(500, res.getStatusCodeValue());
+		assertEquals(500, res.getStatusCode().value());
 	}
 }

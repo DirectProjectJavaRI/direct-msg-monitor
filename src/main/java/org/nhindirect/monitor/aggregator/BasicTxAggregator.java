@@ -23,10 +23,10 @@ package org.nhindirect.monitor.aggregator;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 
 import org.apache.camel.Exchange;
-import org.apache.camel.processor.aggregate.AggregationStrategy;
+import org.apache.camel.Message;
+import org.apache.camel.AggregationStrategy;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.monitor.condition.TxCompletionCondition;
 import org.nhindirect.monitor.condition.TxTimeoutCondition;
@@ -133,12 +133,12 @@ public class BasicTxAggregator implements AggregationStrategy
         if (txs == null)
         	return null;
 		
-        //final Long initialExhangeTime = theExchange.getProperty(TxConditionConstants.AGGREGATION_GROUP_START_TIMESTAMP, Long.class);
-        final Date initialExhangeTime = theExchange.getProperty(Exchange.CREATED_TIMESTAMP, Date.class);
+        final Message msg = theExchange.getMessage();
         
-        if (initialExhangeTime == null)
+        if (msg == null)
         	return null;
+        
 		
-		return timeoutCondition.getTimeout(txs, initialExhangeTime.getTime());
+		return timeoutCondition.getTimeout(txs, msg.getMessageTimestamp());
 	}
 }

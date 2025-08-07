@@ -1,4 +1,4 @@
-package org.nhindirect.monitor.springconfig;
+package org.nhindirect.monitor.autoconfig;
 
 import org.nhindirect.monitor.aggregator.BasicTxAggregator;
 import org.nhindirect.monitor.condition.impl.DecayingTimeoutCondition;
@@ -8,16 +8,14 @@ import org.nhindirect.monitor.condition.impl.VariableCompletionCondition;
 import org.nhindirect.monitor.condition.impl.VariableTimeoutCondition;
 import org.nhindirect.monitor.expression.MessageIdCorrelationExpression;
 import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
-public class ConditionConfig
+@AutoConfiguration
+public class ConditionAutoConfiguration
 {
-	@Autowired
-	protected ReceivedNotificationRepository recRepo;
 	
 	@Value("${direct.msgmonitor.condition.generalConditionTimeout:3600000}")	
 	private String generalConditionTimeout;
@@ -25,32 +23,37 @@ public class ConditionConfig
 	@Value("${direct.msgmonitor.condition.reliableConditionTimeout:3600000}")	
 	private String reliableConditionTimeout;
 	
+	@ConditionalOnMissingBean
 	@Bean
-	public DecayingTimeoutCondition generalTimeoutCondition()
+	DecayingTimeoutCondition generalTimeoutCondition()
 	{
 		return new DecayingTimeoutCondition(Integer.parseInt(generalConditionTimeout));
 	}
 	
+	@ConditionalOnMissingBean
 	@Bean
-	public DecayingTimeoutCondition reliableTimeoutCondition()
+    DecayingTimeoutCondition reliableTimeoutCondition()
 	{
 		return new DecayingTimeoutCondition(Integer.parseInt(reliableConditionTimeout));
 	}
 	
+	@ConditionalOnMissingBean
 	@Bean
-	public VariableTimeoutCondition varaiableTimeoutCondition()
+	VariableTimeoutCondition varaiableTimeoutCondition()
 	{
 		return new VariableTimeoutCondition(generalTimeoutCondition(), reliableTimeoutCondition());
 	}	
 	
+	@ConditionalOnMissingBean
 	@Bean 
-	public GeneralCompletionCondition generalCompletionCondition()
+	GeneralCompletionCondition generalCompletionCondition()
 	{
 		return new GeneralCompletionCondition();
 	}
 	
+	@ConditionalOnMissingBean
 	@Bean
-	public TimelyAndReliableCompletionCondition reliableCompletionCondition()
+	TimelyAndReliableCompletionCondition reliableCompletionCondition(ReceivedNotificationRepository recRepo)
 	{
 		final TimelyAndReliableCompletionCondition retVal = new TimelyAndReliableCompletionCondition();
 		retVal.setReceivedNotificationRepository(recRepo);
@@ -58,20 +61,25 @@ public class ConditionConfig
 		return retVal;
 	}
 	
+	@ConditionalOnMissingBean
 	@Bean
-	public VariableCompletionCondition variableCompletionCondition()
+	VariableCompletionCondition variableCompletionCondition(TimelyAndReliableCompletionCondition reliableCompletionCondition, 
+			GeneralCompletionCondition generalCompletionCondition)
 	{
-		return new VariableCompletionCondition(reliableCompletionCondition(), generalCompletionCondition());
+		return new VariableCompletionCondition(reliableCompletionCondition, generalCompletionCondition);
 	}
 	
+	@ConditionalOnMissingBean
 	@Bean 
-	public BasicTxAggregator aggregationStrategy()
+	BasicTxAggregator aggregationStrategy(VariableCompletionCondition variableCompletionCondition, 
+			VariableTimeoutCondition variableTimeoutCondition)
 	{
-		return new BasicTxAggregator(variableCompletionCondition(), varaiableTimeoutCondition());
+		return new BasicTxAggregator(variableCompletionCondition, variableTimeoutCondition);
 	}
 	
+	@ConditionalOnMissingBean
 	@Bean 
-	public MessageIdCorrelationExpression msgIdCorrelator()
+	MessageIdCorrelationExpression msgIdCorrelator()
 	{
 		return new MessageIdCorrelationExpression();
 	}

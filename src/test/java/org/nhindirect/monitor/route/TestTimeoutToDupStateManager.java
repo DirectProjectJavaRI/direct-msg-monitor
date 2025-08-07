@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.EndpointInject;
@@ -39,7 +39,7 @@ public class TestTimeoutToDupStateManager extends SpringBaseTest
 	@Autowired
 	protected CamelContext context;
 	
-	@EndpointInject(uri = "direct:start")
+	@EndpointInject("direct:start")
 	protected ProducerTemplate template;
 	
 	public void purgeNotifDAO(ReceivedNotificationRepository recRepo) throws Exception
@@ -103,7 +103,8 @@ public class TestTimeoutToDupStateManager extends SpringBaseTest
 		purgeNotifDAO(recRepo);
 		
 		MockEndpoint mock = context.getEndpoint("mock:result", MockEndpoint.class);
-
+		mock.setLog(true);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		

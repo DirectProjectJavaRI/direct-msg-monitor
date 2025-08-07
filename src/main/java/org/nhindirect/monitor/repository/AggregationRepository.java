@@ -3,7 +3,7 @@ package org.nhindirect.monitor.repository;
 import java.util.List;
 import java.util.Optional;
 
-import javax.persistence.LockModeType;
+import jakarta.persistence.LockModeType;
 
 import org.nhindirect.monitor.entity.Aggregation;
 import org.springframework.data.jpa.repository.JpaRepository;

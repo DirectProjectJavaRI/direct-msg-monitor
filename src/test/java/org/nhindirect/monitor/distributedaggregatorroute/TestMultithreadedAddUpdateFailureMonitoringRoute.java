@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 import org.nhindirect.monitor.util.TestUtils;
 
-@TestPropertySource(properties = "camel.springboot.xmlRoutes=classpath:distributedAggregatorRoutes/multithreaded-route-to-mock.xml")
+@TestPropertySource(properties = "camel.springboot.routes-include-pattern=classpath:distributedAggregatorRoutes/multithreaded-route-to-mock.xml")
 public class TestMultithreadedAddUpdateFailureMonitoringRoute extends SpringBaseTest 
 {
 	@Autowired

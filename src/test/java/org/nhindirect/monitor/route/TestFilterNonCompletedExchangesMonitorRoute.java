@@ -1,12 +1,8 @@
 package org.nhindirect.monitor.route;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 @TestPropertySource(locations="classpath:properties/shorttimeout.properties", 
-properties = "camel.springboot.xmlRoutes=classpath:routes/monitor-route-to-mock-with-complete-filter.xml")
+properties = "camel.springboot.routes-include-pattern=classpath:routes/monitor-route-to-mock-with-complete-filter.xml")
 @ActiveProfiles("producerMock")
 public class TestFilterNonCompletedExchangesMonitorRoute extends SpringBaseTest 
 {
@@ -57,6 +53,8 @@ public class TestFilterNonCompletedExchangesMonitorRoute extends SpringBaseTest
 	@Test
 	public void testTimeoutReliableMessage_conditionNotComplete_assertFilteredOut() throws Exception
 	{
+		mock.expectedMessageCount(0);
+		
 
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
@@ -65,18 +63,17 @@ public class TestFilterNonCompletedExchangesMonitorRoute extends SpringBaseTest
 		template.sendBody("direct:start", originalMessage);
 
 		// no MDN sent... messages should timeout after 2 seconds
-		// sleep 3 seconds to make sure it completes
-		Thread.sleep(3000);
-		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
 		
 		// this message should be removed out by the completion filter
-		assertEquals(0, exchanges.size());
+		
+		mock.assertIsSatisfied();
 	}
 	
 	@Test
 	public void testTimeoutReliableMessage_conditionComplete_assertMessageMovedForware() throws Exception
 	{
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -94,9 +91,8 @@ public class TestFilterNonCompletedExchangesMonitorRoute extends SpringBaseTest
 		
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
 		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
 		
 	}
 }

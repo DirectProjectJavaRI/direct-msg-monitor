@@ -1,4 +1,4 @@
-package org.nhindirect.monitor.springconfig;
+package org.nhindirect.monitor.autoconfig;
 
 import javax.sql.DataSource;
 
@@ -10,7 +10,7 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.util.ClassUtils;
 
 @Configuration
-public class EntityManagerConfig
+public class EntityManagerAutoConfiguration
 {
 	@Autowired
 	protected DataSource dataSource;

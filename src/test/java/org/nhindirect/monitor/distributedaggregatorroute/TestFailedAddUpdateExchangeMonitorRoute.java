@@ -21,7 +21,7 @@ import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = "camel.springboot.xmlRoutes=classpath:distributedAggregatorRoutes/monitor-route-to-mock-addupdate-error.xml")
+@TestPropertySource(properties = "camel.springboot.routes-include-pattern=classpath:distributedAggregatorRoutes/monitor-route-to-mock-addupdate-error.xml")
 public class TestFailedAddUpdateExchangeMonitorRoute extends SpringBaseTest 
 {
 	@Autowired
@@ -55,6 +55,8 @@ public class TestFailedAddUpdateExchangeMonitorRoute extends SpringBaseTest
 	@Test
     public void testSingleRecipMDNReceived_assertConditionComplete() throws Exception 
     {
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -74,7 +76,7 @@ public class TestFailedAddUpdateExchangeMonitorRoute extends SpringBaseTest
 		
 		List<Exchange> exchanges = mock.getReceivedExchanges();
 		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
 		
 		// validate the content of the exchange
 		Collection<Tx> exBody = (Collection<Tx>)exchanges.iterator().next().getIn().getBody();
@@ -85,6 +87,8 @@ public class TestFailedAddUpdateExchangeMonitorRoute extends SpringBaseTest
 	@Test
     public void testSingleRecipNoMDNReceived_assertConditionNotComplete() throws Exception 
     {
+		mock.expectedMessageCount(0);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();
 
@@ -94,5 +98,7 @@ public class TestFailedAddUpdateExchangeMonitorRoute extends SpringBaseTest
 		List<Exchange> exchanges = mock.getReceivedExchanges();
 		
 		assertEquals(0, exchanges.size());
+		
+		mock.assertIsSatisfied();
     }
 }

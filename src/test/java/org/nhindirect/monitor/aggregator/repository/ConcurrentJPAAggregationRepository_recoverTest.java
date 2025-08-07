@@ -18,7 +18,7 @@ import java.util.List;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
-import org.apache.camel.impl.DefaultExchange;
+import org.apache.camel.support.DefaultExchange;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxDetailType;
 import org.nhindirect.common.tx.model.TxMessageType;
@@ -110,6 +110,7 @@ public class ConcurrentJPAAggregationRepository_recoverTest extends SpringBaseTe
 		final Collection<Tx> retrievedTxs = (Collection<Tx>)completedExchange.getIn().getBody();
 		assertEquals(2, retrievedTxs.size());
 		
+
 		assertEquals("12345", retrievedTxs.iterator().next().getDetail(TxDetailType.MSG_ID).getDetailValue());
 	}
 	

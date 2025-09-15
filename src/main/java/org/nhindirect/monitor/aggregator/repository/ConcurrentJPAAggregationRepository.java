@@ -45,7 +45,6 @@ import org.fusesource.hawtbuf.DataByteArrayInputStream;
 import org.fusesource.hawtbuf.DataByteArrayOutputStream;
 import org.fusesource.hawtbuf.codec.Codec;
 import org.fusesource.hawtbuf.codec.ObjectCodec;
-import org.fusesource.hawtbuf.codec.StringCodec;
 import org.nhindirect.monitor.entity.Aggregation;
 import org.nhindirect.monitor.entity.AggregationCompleted;
 import org.nhindirect.monitor.repository.AggregationCompletedRepository;

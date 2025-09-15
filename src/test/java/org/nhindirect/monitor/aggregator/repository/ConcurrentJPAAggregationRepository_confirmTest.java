@@ -51,33 +51,37 @@ public class ConcurrentJPAAggregationRepository_confirmTest extends SpringBaseTe
 	}
 	
 	@Test
-	public void testConfirm_exchangeNotInRepository_assertNoException()
+	public void testConfirm_exchangeNotInRepository_assertNoException() throws Exception
 	{
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120)){
+			repo.confirm(context, "12345");
+		}
 		
-		repo.confirm(context, "12345");
+		
 	}
 	
 	@Test
-	public void testConfirm_completedExchangeInRepository_assertExchangeRemoved()
+	public void testConfirm_completedExchangeInRepository_assertExchangeRemoved() throws Exception
 	{
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Exchange exchange = new DefaultExchange(context);
 		exchange.getIn().setBody(tx);
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		repo.add(context, "12345", exchange);
-		
-		repo.remove(context, "12345", exchange);
-		
-		assertNull(repo.get(context, "12345"));
-		
-		final Exchange completedExchange = repo.recover(context, exchange.getExchangeId());
-		assertNotNull(completedExchange);
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			repo.add(context, "12345", exchange);
+			
+			repo.remove(context, "12345", exchange);
+			
+			assertNull(repo.get(context, "12345"));
+			
+			final Exchange completedExchange = repo.recover(context, exchange.getExchangeId());
+			assertNotNull(completedExchange);
 
-		repo.confirm(context, exchange.getExchangeId());
+			repo.confirm(context, exchange.getExchangeId());
+			
+			assertNull(repo.recover(context, exchange.getExchangeId()));	
+		}
 		
-		assertNull(repo.recover(context, exchange.getExchangeId()));
 	}
 }

@@ -55,100 +55,109 @@ public class ConcurrentJPAAggregationRepository_addTest extends SpringBaseTest
 	}
 	
 	@Test
-	public void testAdd_emptyRepository_addExchangeWithTxBody_assertExchangeAdded()
+	public void testAdd_emptyRepository_addExchangeWithTxBody_assertExchangeAdded() throws Exception
 	{
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Exchange exchange = new DefaultExchange(context);
 		exchange.getIn().setBody(tx);
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		repo.add(context, "12345", exchange);
-		
-		final Exchange ex = repo.get(context, "12345");
-		assertNotNull(ex);
-		final Tx retrievedTx = (Tx)ex.getIn().getBody();
-		assertEquals("12345", retrievedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
-		final Integer version = (Integer)ex.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
-		assertEquals(0, version.intValue());
+		try(final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			
+			repo.add(context, "12345", exchange);
+			
+			final Exchange ex = repo.get(context, "12345");
+			assertNotNull(ex);
+			final Tx retrievedTx = (Tx)ex.getIn().getBody();
+			assertEquals("12345", retrievedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
+			final Integer version = (Integer)ex.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
+			assertEquals(0, version.intValue());
+		}
+
 	}
 	
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testAdd_existingExchange_updateBody_assertExchangeAdded()
+	public void testAdd_existingExchange_updateBody_assertExchangeAdded() throws Exception
 	{
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Exchange exchange = new DefaultExchange(context);
 		exchange.getIn().setBody(tx);
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
 		
-		repo.add(context, "12345", exchange);
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			repo.add(context, "12345", exchange);
 
-		// now update it
-		
-		Exchange retrievedEx = repo.get(context, "12345");
+			// now update it
+			
+			Exchange retrievedEx = repo.get(context, "12345");
 
-		final Tx tx1 = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
-		final Tx tx2 = TestUtils.makeMessage(TxMessageType.IMF, "67890", "", "me@test2.com", "you@test2.com", "", "", "");
-		
-		final Collection<Tx> txs = Arrays.asList(tx1, tx2);
-		retrievedEx.getIn().setBody(txs);
-		repo.add(context, "12345", retrievedEx);
-		
-		retrievedEx = repo.get(context, "12345");
+			final Tx tx1 = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
+			final Tx tx2 = TestUtils.makeMessage(TxMessageType.IMF, "67890", "", "me@test2.com", "you@test2.com", "", "", "");
+			
+			final Collection<Tx> txs = Arrays.asList(tx1, tx2);
+			retrievedEx.getIn().setBody(txs);
+			repo.add(context, "12345", retrievedEx);
+			
+			retrievedEx = repo.get(context, "12345");
 
-		final Collection<Tx> retrievedTxs = (Collection<Tx>)retrievedEx.getIn().getBody();
-		assertEquals(2, retrievedTxs.size());
+			final Collection<Tx> retrievedTxs = (Collection<Tx>)retrievedEx.getIn().getBody();
+			assertEquals(2, retrievedTxs.size());
+			
+			assertEquals("12345", retrievedTxs.iterator().next().getDetail(TxDetailType.MSG_ID).getDetailValue());
+			final Integer version = (Integer)retrievedEx.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
+			assertEquals(1, version.intValue());
+		}
 		
-		assertEquals("12345", retrievedTxs.iterator().next().getDetail(TxDetailType.MSG_ID).getDetailValue());
-		final Integer version = (Integer)retrievedEx.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
-		assertEquals(1, version.intValue());
+
 	}
 	
 	@Test
-	public void testAdd_existingExchange_invalidVersion_assertExchangeAdded()
+	public void testAdd_existingExchange_invalidVersion_assertExchangeAdded() throws Exception 
 	{
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Exchange exchange = new DefaultExchange(context);
 		exchange.getIn().setBody(tx);
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		repo.add(context, "12345", exchange);
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120)) {
+			repo.add(context, "12345", exchange);
 
-		// now try to update it
-		
-		Exchange retrievedEx = repo.get(context, "12345");
-		
-		final Tx tx1 = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
-		final Tx tx2 = TestUtils.makeMessage(TxMessageType.IMF, "67890", "", "me@test2.com", "you@test2.com", "", "", "");
-		
-		final Collection<Tx> txs = Arrays.asList(tx1, tx2);
-		retrievedEx.getIn().setBody(txs);
-		retrievedEx.setProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON, 35);
-		
-		boolean exceptionOccured = false;
-		
-		try
-		{
-			repo.add(context, "12345", retrievedEx);
-		}
-		catch (RuntimeException e)
-		{
-			exceptionOccured = true;
-		}
+			// now try to update it
+			
+			Exchange retrievedEx = repo.get(context, "12345");
+			
+			final Tx tx1 = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
+			final Tx tx2 = TestUtils.makeMessage(TxMessageType.IMF, "67890", "", "me@test2.com", "you@test2.com", "", "", "");
+			
+			final Collection<Tx> txs = Arrays.asList(tx1, tx2);
+			retrievedEx.getIn().setBody(txs);
+			retrievedEx.setProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON, 35);
+			
+			boolean exceptionOccured = false;
+			
+			try
+			{
+				repo.add(context, "12345", retrievedEx);
+			}
+			catch (RuntimeException e)
+			{
+				exceptionOccured = true;
+			}
 
-		assertTrue(exceptionOccured);
+			assertTrue(exceptionOccured);
+			
+			
+			// make sure id didn't change
+			final Exchange ex = repo.get(context, "12345");
+			assertNotNull(ex);
+			final Tx retrievedTx = (Tx)ex.getIn().getBody();
+			assertEquals("12345", retrievedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
+			final Integer version = (Integer)ex.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
+			assertEquals(0, version.intValue());
+
+		}
 		
-		
-		// make sure id didn't change
-		final Exchange ex = repo.get(context, "12345");
-		assertNotNull(ex);
-		final Tx retrievedTx = (Tx)ex.getIn().getBody();
-		assertEquals("12345", retrievedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
-		final Integer version = (Integer)ex.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
-		assertEquals(0, version.intValue());
 
 	}
 }

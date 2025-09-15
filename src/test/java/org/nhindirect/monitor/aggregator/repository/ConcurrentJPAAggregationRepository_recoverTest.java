@@ -58,35 +58,37 @@ public class ConcurrentJPAAggregationRepository_recoverTest extends SpringBaseTe
 	}
 	
 	@Test
-	public void testRecover_emptyRepository_assertNoRecovery()
+	public void testRecover_emptyRepository_assertNoRecovery() throws Exception
 	{
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		assertNull(repo.recover(context, "12345"));
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			assertNull(repo.recover(context, "12345"));
+		}
 	}
 	
 	@Test
-	public void testRecover_exchangeInRepo_assertRecovered()
+	public void testRecover_exchangeInRepo_assertRecovered() throws Exception
 	{
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Exchange exchange = new DefaultExchange(context);
 		exchange.getIn().setBody(tx);
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		repo.add(context, "12345", exchange);
-		
-		repo.remove(context, "12345", exchange);
-		
-		final Exchange completedExchange = repo.recover(context, exchange.getExchangeId());
-		assertNotNull(completedExchange);
-		final Tx completedTx = (Tx)completedExchange.getIn().getBody();
-		assertEquals("12345", completedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			repo.add(context, "12345", exchange);
+			
+			repo.remove(context, "12345", exchange);
+			
+			final Exchange completedExchange = repo.recover(context, exchange.getExchangeId());
+			assertNotNull(completedExchange);
+			final Tx completedTx = (Tx)completedExchange.getIn().getBody();
+			assertEquals("12345", completedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
+		}
 	}
 	
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testRecover_exchangeWithCollectionBodyInRepo_assertRecovered()
+	public void testRecover_exchangeWithCollectionBodyInRepo_assertRecovered() throws Exception
 	{
 		final Tx tx1 = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Tx tx2 = TestUtils.makeMessage(TxMessageType.IMF, "67890", "", "me@test2.com", "you@test2.com", "", "", "");
@@ -97,21 +99,21 @@ public class ConcurrentJPAAggregationRepository_recoverTest extends SpringBaseTe
 		exchange.getIn().setBody(txs);
 		
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		repo.add(context, "12345", exchange);
-		
-		repo.remove(context, "12345", exchange);
-		
-		final Exchange completedExchange = repo.recover(context, exchange.getExchangeId());
-		assertNotNull(completedExchange);
-		
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120)){
+			repo.add(context, "12345", exchange);
+			
+			repo.remove(context, "12345", exchange);
+			
+			final Exchange completedExchange = repo.recover(context, exchange.getExchangeId());
+			assertNotNull(completedExchange);
+			
 
-		final Collection<Tx> retrievedTxs = (Collection<Tx>)completedExchange.getIn().getBody();
-		assertEquals(2, retrievedTxs.size());
-		
+			final Collection<Tx> retrievedTxs = (Collection<Tx>)completedExchange.getIn().getBody();
+			assertEquals(2, retrievedTxs.size());
+			
 
-		assertEquals("12345", retrievedTxs.iterator().next().getDetail(TxDetailType.MSG_ID).getDetailValue());
+			assertEquals("12345", retrievedTxs.iterator().next().getDetail(TxDetailType.MSG_ID).getDetailValue());
+		}
 	}
 	
 	@Test
@@ -120,18 +122,19 @@ public class ConcurrentJPAAggregationRepository_recoverTest extends SpringBaseTe
 		AggregationCompletedRepository dao = mock(AggregationCompletedRepository.class);
 		doThrow(new RuntimeException()).when(dao).findById((String)any());
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, dao, 120 );
-		
-		boolean exceptionOccured = false;
-		try
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, dao, 120 ))
 		{
-			repo.recover(context, "12345");
+			boolean exceptionOccured = false;
+			try
+			{
+				repo.recover(context, "12345");
+			}
+			catch(RuntimeException e)
+			{
+				exceptionOccured = true;
+			}
+			
+			assertTrue(exceptionOccured);
 		}
-		catch(RuntimeException e)
-		{
-			exceptionOccured = true;
-		}
-		
-		assertTrue(exceptionOccured);
 	}	
 }

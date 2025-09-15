@@ -75,6 +75,7 @@ public class BasicTxAggregator implements AggregationStrategy
 	{
 		// if the old exchange is null, then this is the first message is the aggregation set
 		// as determined by the correlator
+		
         if (oldExchange == null) 
         {
         	// just replace the contents of the incoming exchange with a collection of Tx messages
@@ -82,6 +83,8 @@ public class BasicTxAggregator implements AggregationStrategy
         	
         	txs.add(newExchange.getIn().getBody(Tx.class));
         	newExchange.getIn().setBody(txs);
+        	newExchange.setProperty("EXCHANGE_TIMSTAMP", System.currentTimeMillis());
+        	
         	
         	return newExchange; 
         }
@@ -138,7 +141,11 @@ public class BasicTxAggregator implements AggregationStrategy
         if (msg == null)
         	return null;
         
-		
-		return timeoutCondition.getTimeout(txs, msg.getMessageTimestamp());
+        Long timeStamp = (Long)theExchange.getProperty("EXCHANGE_TIMSTAMP");
+        if (timeStamp == null)
+        	timeStamp = msg.getMessageTimestamp();
+        
+        
+		return timeoutCondition.getTimeout(txs, timeStamp);
 	}
 }

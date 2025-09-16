@@ -76,6 +76,37 @@ public class TestTimedOutMonitorRoute extends SpringBaseTest
 	}
 	
 	@Test
+	public void testTimeoutNonReliableMessage_incorrectFinalRecip_conditionNotComplete_assertTimedOut() throws Exception
+	{
+
+		// send original message
+		final String originalMessageId = UUID.randomUUID().toString();
+
+		Tx originalMessage = TestUtils.makeMessage(TxMessageType.IMF, originalMessageId, "", "gm2552@cerner.com", "gm2552@direct.securehealthemail.com", "");
+		template.sendBody("direct:start", originalMessage);
+
+		
+		// sleep .5 second then send the next part of the message
+		Thread.sleep(500);
+		
+		// send MDN processed to original message with wrong final recipient
+		Tx mdnMessage = TestUtils.makeMessage(TxMessageType.MDN, UUID.randomUUID().toString(), originalMessageId, "gm2552@direct.securehealthemail.com", 
+				"gm2552@cerner.com", "gm2552@cerner.com", "", MDNStandard.Disposition_Processed);
+		template.sendBody("direct:start", mdnMessage);
+
+		
+		// no MDN sent... messages should timeout after 2 seconds
+		// sleep 3 seconds to make sure it completes
+		Thread.sleep(3000);
+		
+		List<Exchange> exchanges = mock.getReceivedExchanges();
+		
+		assertEquals(1, exchanges.size());
+		Exchange exchange = exchanges.iterator().next();
+		assertEquals("timeout", exchange.getProperty(Exchange.AGGREGATED_COMPLETED_BY));
+	}
+	
+	@Test
 	public void testTimeoutReliableMessage_conditionNotComplete_assertTimedOut() throws Exception
 	{
 		// send original message

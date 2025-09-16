@@ -41,7 +41,7 @@ public class ConditionAutoConfiguration
 	@Bean
 	VariableTimeoutCondition varaiableTimeoutCondition()
 	{
-		return new VariableTimeoutCondition(generalTimeoutCondition(), reliableTimeoutCondition());
+		return new VariableTimeoutCondition(reliableTimeoutCondition(), generalTimeoutCondition());
 	}	
 	
 	@ConditionalOnMissingBean

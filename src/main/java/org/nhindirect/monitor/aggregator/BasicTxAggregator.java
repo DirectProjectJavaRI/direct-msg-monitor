@@ -80,14 +80,21 @@ public class BasicTxAggregator implements AggregationStrategy
         {
         	// just replace the contents of the incoming exchange with a collection of Tx messages
         	final Collection<Tx> txs = new ArrayList<Tx>();
+        	Message newMsg = newExchange.getIn();
         	
-        	txs.add(newExchange.getIn().getBody(Tx.class));
-        	newExchange.getIn().setBody(txs);
-        	newExchange.setProperty("EXCHANGE_TIMSTAMP", System.currentTimeMillis());
+        	txs.add(newMsg.getBody(Tx.class));
         	
+        	newMsg.setBody(txs);
+        	newMsg.setHeader(Exchange.MESSAGE_TIMESTAMP, System.currentTimeMillis());
         	
         	return newExchange; 
         }
+
+        Long timeStamp = (Long)oldExchange.getIn().getHeader(Exchange.MESSAGE_TIMESTAMP);
+        if (timeStamp != null) {
+        	newExchange.getIn().setHeader(Exchange.MESSAGE_TIMESTAMP, timeStamp);
+        }
+        
         
         // the old exchange should contain the aggregated set of Tx messages as a collection
         // add the Tx message in the new exchange to the collection of the old exchange
@@ -141,7 +148,7 @@ public class BasicTxAggregator implements AggregationStrategy
         if (msg == null)
         	return null;
         
-        Long timeStamp = (Long)theExchange.getProperty("EXCHANGE_TIMSTAMP");
+        Long timeStamp = (Long)msg.getHeader(Exchange.MESSAGE_TIMESTAMP);
         if (timeStamp == null)
         	timeStamp = msg.getMessageTimestamp();
         

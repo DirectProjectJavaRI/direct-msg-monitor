@@ -3,7 +3,8 @@ package org.nhindirect.monitor.route;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -99,9 +100,10 @@ public class TestNonCompletedToDSNGeneratorMonitorRoute extends SpringBaseTest
 		
 		MimeMessage dsnMessage = (MimeMessage)exchanges.get(0).getIn().getBody();
 	
-		ByteArrayOutputStream oStr = new ByteArrayOutputStream();
-		dsnMessage.writeTo(oStr);
-		String str = new String(oStr.toByteArray());
+		InputStream is = dsnMessage.getInputStream();
+		byte[] bytes = is.readAllBytes();
+		String str = new String(bytes, StandardCharsets.UTF_8);
+		
 		
 		assertTrue(str.contains("ah4626@direct.securehealthemail.com"));
 		assertFalse(str.contains("gm2552@direct.securehealthemail.com"));
@@ -132,9 +134,9 @@ public class TestNonCompletedToDSNGeneratorMonitorRoute extends SpringBaseTest
 		
 		MimeMessage dsnMessage = (MimeMessage)exchanges.get(0).getIn().getBody();
 	
-		ByteArrayOutputStream oStr = new ByteArrayOutputStream();
-		dsnMessage.writeTo(oStr);
-		String str = new String(oStr.toByteArray());
+		InputStream is = dsnMessage.getInputStream();
+		byte[] bytes = is.readAllBytes();
+		String str = new String(bytes, StandardCharsets.UTF_8);
 		
 		assertTrue(str.contains("ah4626@direct.securehealthemail.com"));
 		assertFalse(str.contains("gm2552@direct.securehealthemail.com"));
@@ -169,9 +171,9 @@ public class TestNonCompletedToDSNGeneratorMonitorRoute extends SpringBaseTest
 		
 		MimeMessage dsnMessage = (MimeMessage)exchanges.get(0).getIn().getBody();
 	
-		ByteArrayOutputStream oStr = new ByteArrayOutputStream();
-		dsnMessage.writeTo(oStr);
-		String str = new String(oStr.toByteArray());
+		InputStream is = dsnMessage.getInputStream();
+		byte[] bytes = is.readAllBytes();
+		String str = new String(bytes, StandardCharsets.UTF_8);
 		
 		assertFalse(str.contains("ah4626@direct.securehealthemail.com"));
 		assertFalse(str.contains("gm2552@direct.securehealthemail.com"));

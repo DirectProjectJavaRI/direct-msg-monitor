@@ -33,6 +33,14 @@ import org.springframework.test.context.TestPropertySource;
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class TestTimeoutToDupStateManager extends SpringBaseTest 
 {
+	static {
+		System.setProperty(
+			    "mail.mime.ignoremissingcontenthandler",
+			    "true"
+			);
+
+	}
+	
 	@Autowired
 	private ReceivedNotificationRepository recRepo;
 	

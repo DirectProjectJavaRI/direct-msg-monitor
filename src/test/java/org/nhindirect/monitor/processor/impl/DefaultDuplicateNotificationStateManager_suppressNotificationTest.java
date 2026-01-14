@@ -21,7 +21,7 @@ import org.nhindirect.monitor.processor.DuplicateNotificationStateManagerExcepti
 import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
 import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;

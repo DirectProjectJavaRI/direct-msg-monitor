@@ -11,7 +11,7 @@
     <parent>
 	   <groupId>org.springframework.boot</groupId>
 	   <artifactId>spring-boot-dependencies</artifactId>
-	   <version>3.5.0</version>
+	   <version>4.0.1</version>
 	   <relativePath />
     </parent>	   
     <developers>
@@ -45,7 +45,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<camel.version>4.12.0</camel.version>  
         <commons-collections4.version>4.5.0</commons-collections4.version>
-        <commons-net.version>3.11.1</commons-net.version>
+        <commons-net.version>3.12.0</commons-net.version>
         <camel-hawtdb.version>2.25.4</camel-hawtdb.version>
         <hawtbuf.version>1.7</hawtbuf.version>
         <hawtdb.version>1.6</hawtdb.version>
@@ -54,8 +54,8 @@
 		<dependencies>	
 		  <dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-starter-parent</artifactId>
-				<version>2025.0.0</version>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>2025.1.0</version>
 				<type>pom</type>
 				<scope>import</scope>
 		  </dependency>                					
@@ -155,7 +155,12 @@
 	        <groupId>org.springframework.cloud</groupId>
 	        <artifactId>spring-cloud-starter-stream-rabbit</artifactId>  
 		    <scope>test</scope>     
-	    </dependency>			    
+	    </dependency>	
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+		    <scope>test</scope>
+		</dependency>	    		    
 		<dependency>
 		    <groupId>com.h2database</groupId>
 		    <artifactId>h2</artifactId>

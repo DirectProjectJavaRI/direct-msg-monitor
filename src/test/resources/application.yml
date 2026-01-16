@@ -21,3 +21,4 @@ spring:
             backOffInitialInterval: 30000
             backOffMaxInterval: 120000
             
+  mail.properties.mail.mime.ignoremissingcontenthandler: true

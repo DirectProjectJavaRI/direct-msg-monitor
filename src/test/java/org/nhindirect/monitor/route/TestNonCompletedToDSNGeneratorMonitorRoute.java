@@ -1,14 +1,14 @@
 package org.nhindirect.monitor.route;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
 @TestPropertySource(locations="classpath:properties/shorttimeout.properties", 
-   properties = "camel.springboot.xmlRoutes=classpath:routes/monitor-route-to-error-message-generator.xml")
+   properties = "camel.springboot.routes-include-pattern=classpath:routes/monitor-route-to-error-message-generator.xml")
 public class TestNonCompletedToDSNGeneratorMonitorRoute extends SpringBaseTest 
 {
 	@Autowired
@@ -61,6 +61,8 @@ public class TestNonCompletedToDSNGeneratorMonitorRoute extends SpringBaseTest
 	@Test
 	public void testNonCompleted_assertDSNGenerated() throws Exception
 	{
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();
 
@@ -69,17 +71,15 @@ public class TestNonCompletedToDSNGeneratorMonitorRoute extends SpringBaseTest
 		template.sendBody("direct:start", originalMessage);
 
 		// no MDN sent... messages should timeout after 2 seconds
-		// sleep 3 seconds to make sure it completes
-		Thread.sleep(3000);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
 	}
 	
 	@Test
 	public void testNonCompleted_multipleRecipeints_singleCompletedSuccessfully_assertDSNGeneratedAndValidTimedout() throws Exception
 	{
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();
 
@@ -94,18 +94,16 @@ public class TestNonCompletedToDSNGeneratorMonitorRoute extends SpringBaseTest
 
 		
 		// single MDN sent... messages should timeout after 2 seconds
-		// sleep 3 seconds to make sure it completes
-		Thread.sleep(3000);
+		mock.assertIsSatisfied();
 		
 		List<Exchange> exchanges = mock.getReceivedExchanges();
 		
-		assertEquals(1, exchanges.size());
-		
 		MimeMessage dsnMessage = (MimeMessage)exchanges.get(0).getIn().getBody();
 	
-		ByteArrayOutputStream oStr = new ByteArrayOutputStream();
-		dsnMessage.writeTo(oStr);
-		String str = new String(oStr.toByteArray());
+		InputStream is = dsnMessage.getInputStream();
+		byte[] bytes = is.readAllBytes();
+		String str = new String(bytes, StandardCharsets.UTF_8);
+		
 		
 		assertTrue(str.contains("ah4626@direct.securehealthemail.com"));
 		assertFalse(str.contains("gm2552@direct.securehealthemail.com"));
@@ -114,6 +112,8 @@ public class TestNonCompletedToDSNGeneratorMonitorRoute extends SpringBaseTest
 	@Test
 	public void testNonCompleted_multipleRecipeints_singleDSNAndOneIncomplete_assertDSNGeneratedAndValidTimedout() throws Exception
 	{
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();
 
@@ -128,18 +128,15 @@ public class TestNonCompletedToDSNGeneratorMonitorRoute extends SpringBaseTest
 
 		
 		// single MDN sent... messages should timeout after 2 seconds
-		// sleep 3 seconds to make sure it completes
-		Thread.sleep(3000);
+		mock.assertIsSatisfied();
 		
 		List<Exchange> exchanges = mock.getReceivedExchanges();
 		
-		assertEquals(1, exchanges.size());
-		
 		MimeMessage dsnMessage = (MimeMessage)exchanges.get(0).getIn().getBody();
 	
-		ByteArrayOutputStream oStr = new ByteArrayOutputStream();
-		dsnMessage.writeTo(oStr);
-		String str = new String(oStr.toByteArray());
+		InputStream is = dsnMessage.getInputStream();
+		byte[] bytes = is.readAllBytes();
+		String str = new String(bytes, StandardCharsets.UTF_8);
 		
 		assertTrue(str.contains("ah4626@direct.securehealthemail.com"));
 		assertFalse(str.contains("gm2552@direct.securehealthemail.com"));
@@ -148,6 +145,8 @@ public class TestNonCompletedToDSNGeneratorMonitorRoute extends SpringBaseTest
 	@Test
 	public void testNonCompleted_multipleRecipeints_singleDSNSingleProcessAndOneIncomplete_assertDSNGeneratedAndValidTimedout() throws Exception
 	{
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();
 
@@ -166,18 +165,15 @@ public class TestNonCompletedToDSNGeneratorMonitorRoute extends SpringBaseTest
 		template.sendBody("direct:start", mdnMessage);
 		
 		// single MDN sent... messages should timeout after 2 seconds
-		// sleep 3 seconds to make sure it completes
-		Thread.sleep(3000);
+		mock.assertIsSatisfied();
 		
 		List<Exchange> exchanges = mock.getReceivedExchanges();
 		
-		assertEquals(1, exchanges.size());
-		
 		MimeMessage dsnMessage = (MimeMessage)exchanges.get(0).getIn().getBody();
 	
-		ByteArrayOutputStream oStr = new ByteArrayOutputStream();
-		dsnMessage.writeTo(oStr);
-		String str = new String(oStr.toByteArray());
+		InputStream is = dsnMessage.getInputStream();
+		byte[] bytes = is.readAllBytes();
+		String str = new String(bytes, StandardCharsets.UTF_8);
 		
 		assertFalse(str.contains("ah4626@direct.securehealthemail.com"));
 		assertFalse(str.contains("gm2552@direct.securehealthemail.com"));

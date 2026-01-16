@@ -17,7 +17,7 @@ import java.util.Set;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
-import org.apache.camel.impl.DefaultExchange;
+import org.apache.camel.support.DefaultExchange;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxMessageType;
 import org.nhindirect.monitor.SpringBaseTest;
@@ -56,17 +56,18 @@ public class ConcurrentJPAAggregationRepository_scanTest extends SpringBaseTest
 	}
 	
 	@Test
-	public void testScan_emptyRepository_assertEmptySet()
+	public void testScan_emptyRepository_assertEmptySet() throws Exception
 	{
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		final Set<String> ids = repo.scan(context);
-		
-		assertEquals(0, ids.size());
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			final Set<String> ids = repo.scan(context);
+			
+			assertEquals(0, ids.size());	
+		}
 	}
 	
 	@Test
-	public void testScan_singleEntryInRepository_assertSingleKey()
+	public void testScan_singleEntryInRepository_assertSingleKey() throws Exception
 	{
 		final Tx tx1 = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Tx tx2 = TestUtils.makeMessage(TxMessageType.IMF, "67890", "", "me@test2.com", "you@test2.com", "", "", "");
@@ -77,16 +78,17 @@ public class ConcurrentJPAAggregationRepository_scanTest extends SpringBaseTest
 		exchange.getIn().setBody(txs);
 		
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		repo.add(context, "12345", exchange);
-		
-		repo.remove(context, "12345", exchange);
-		
-		final Set<String> ids = repo.scan(context);
-		
-		assertEquals(1, ids.size());
-		assertEquals(exchange.getExchangeId(), ids.iterator().next());
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			repo.add(context, "12345", exchange);
+			
+			repo.remove(context, "12345", exchange);
+			
+			final Set<String> ids = repo.scan(context);
+			
+			assertEquals(1, ids.size());
+			assertEquals(exchange.getExchangeId(), ids.iterator().next());
+		}
 	}
 	
 	@Test
@@ -97,11 +99,12 @@ public class ConcurrentJPAAggregationRepository_scanTest extends SpringBaseTest
 		when(dao.findAllKeys()).thenReturn(null);
 		
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, dao, 120);
-		
-		final Set<String> ids = repo.scan(context);
-		
-		assertEquals(0, ids.size());
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, dao, 120))
+		{
+			final Set<String> ids = repo.scan(context);
+			
+			assertEquals(0, ids.size());
+		}
 	}
 	
 	@Test
@@ -110,18 +113,19 @@ public class ConcurrentJPAAggregationRepository_scanTest extends SpringBaseTest
 		AggregationCompletedRepository dao = mock(AggregationCompletedRepository.class);
 		doThrow(new RuntimeException()).when(dao).findAllKeys();
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, dao, 120);
-		
-		boolean exceptionOccured = false;
-		try
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, dao, 120))
 		{
-			repo.scan(context);
+			boolean exceptionOccured = false;
+			try
+			{
+				repo.scan(context);
+			}
+			catch(RuntimeException e)
+			{
+				exceptionOccured = true;
+			}
+			
+			assertTrue(exceptionOccured);
 		}
-		catch(RuntimeException e)
-		{
-			exceptionOccured = true;
-		}
-		
-		assertTrue(exceptionOccured);
 	}	
 }

@@ -1,15 +1,16 @@
-package org.nhindirect.monitor.springconfig;
+package org.nhindirect.monitor.autoconfig;
 
 import org.nhindirect.monitor.processor.impl.DefaultDuplicateNotificationStateManager;
 import org.nhindirect.monitor.processor.impl.TimeoutDupStateManager;
 import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
-public class ProcessorConfig
+@AutoConfiguration
+public class ProcessorAutoConfiguration
 {		
 	@Autowired
 	protected ReceivedNotificationRepository recRepo;
@@ -23,8 +24,9 @@ public class ProcessorConfig
 	@Value("${direct.msgmonitor.dsnSender.routing-key:notifications}")	
 	private String dsnSenderRoutingKey;
 	
+	@ConditionalOnMissingBean
 	@Bean
-	public DefaultDuplicateNotificationStateManager duplicationStateManager()
+	DefaultDuplicateNotificationStateManager duplicationStateManager()
 	{
 		final TimeoutDupStateManager retVal = new TimeoutDupStateManager();
 		

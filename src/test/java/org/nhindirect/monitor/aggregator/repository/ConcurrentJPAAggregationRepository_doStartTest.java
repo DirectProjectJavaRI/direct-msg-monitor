@@ -23,9 +23,12 @@ public class ConcurrentJPAAggregationRepository_doStartTest
 		when(aggRepo.findAllKeys()).thenReturn(new ArrayList<String>());
 		when(aggCompRepo.findAllKeys()).thenReturn(new ArrayList<String>());
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		repo.doStart();
-		repo.doStop();
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			repo.doStart();
+			repo.doStop();
+		}
+
 	}
 	
 	@Test
@@ -36,27 +39,30 @@ public class ConcurrentJPAAggregationRepository_doStartTest
 		when(aggRepo.findAllKeys()).thenReturn(Arrays.asList("12345"));
 		when(aggCompRepo.findAllKeys()).thenReturn(Arrays.asList("12345"));
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		repo.doStart();
-		repo.doStop();
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			repo.doStart();
+			repo.doStop();	
+		}
 	}
 	
 	@Test
 	public void testDoStart_emptyDAO_assertException() throws Exception
 	{
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository();
-		
-		boolean exceptionOccured = false;
-		try
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository())
 		{
-			repo.doStart();
+			boolean exceptionOccured = false;
+			try
+			{
+				repo.doStart();
+			}
+			catch(RuntimeException e)
+			{
+				exceptionOccured = true;
+			}
+			
+			assertTrue(exceptionOccured);			
 		}
-		catch(RuntimeException e)
-		{
-			exceptionOccured = true;
-		}
-		
-		assertTrue(exceptionOccured);
 	}	
 }

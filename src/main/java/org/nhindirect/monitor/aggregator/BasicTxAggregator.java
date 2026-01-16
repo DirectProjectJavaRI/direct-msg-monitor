@@ -23,10 +23,10 @@ package org.nhindirect.monitor.aggregator;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 
 import org.apache.camel.Exchange;
-import org.apache.camel.processor.aggregate.AggregationStrategy;
+import org.apache.camel.Message;
+import org.apache.camel.AggregationStrategy;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.monitor.condition.TxCompletionCondition;
 import org.nhindirect.monitor.condition.TxTimeoutCondition;
@@ -75,16 +75,26 @@ public class BasicTxAggregator implements AggregationStrategy
 	{
 		// if the old exchange is null, then this is the first message is the aggregation set
 		// as determined by the correlator
+		
         if (oldExchange == null) 
         {
         	// just replace the contents of the incoming exchange with a collection of Tx messages
         	final Collection<Tx> txs = new ArrayList<Tx>();
+        	Message newMsg = newExchange.getIn();
         	
-        	txs.add(newExchange.getIn().getBody(Tx.class));
-        	newExchange.getIn().setBody(txs);
+        	txs.add(newMsg.getBody(Tx.class));
+        	
+        	newMsg.setBody(txs);
+        	newMsg.setHeader(Exchange.MESSAGE_TIMESTAMP, System.currentTimeMillis());
         	
         	return newExchange; 
         }
+
+        Long timeStamp = (Long)oldExchange.getIn().getHeader(Exchange.MESSAGE_TIMESTAMP);
+        if (timeStamp != null) {
+        	newExchange.getIn().setHeader(Exchange.MESSAGE_TIMESTAMP, timeStamp);
+        }
+        
         
         // the old exchange should contain the aggregated set of Tx messages as a collection
         // add the Tx message in the new exchange to the collection of the old exchange
@@ -133,12 +143,16 @@ public class BasicTxAggregator implements AggregationStrategy
         if (txs == null)
         	return null;
 		
-        //final Long initialExhangeTime = theExchange.getProperty(TxConditionConstants.AGGREGATION_GROUP_START_TIMESTAMP, Long.class);
-        final Date initialExhangeTime = theExchange.getProperty(Exchange.CREATED_TIMESTAMP, Date.class);
+        final Message msg = theExchange.getMessage();
         
-        if (initialExhangeTime == null)
+        if (msg == null)
         	return null;
-		
-		return timeoutCondition.getTimeout(txs, initialExhangeTime.getTime());
+        
+        Long timeStamp = (Long)msg.getHeader(Exchange.MESSAGE_TIMESTAMP);
+        if (timeStamp == null)
+        	timeStamp = msg.getMessageTimestamp();
+        
+        
+		return timeoutCondition.getTimeout(txs, timeStamp);
 	}
 }

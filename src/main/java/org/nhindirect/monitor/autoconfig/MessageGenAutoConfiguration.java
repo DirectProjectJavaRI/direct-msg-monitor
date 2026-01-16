@@ -1,6 +1,6 @@
-package org.nhindirect.monitor.springconfig;
+package org.nhindirect.monitor.autoconfig;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.apache.camel.ProducerTemplate;
 import org.nhindirect.common.mail.dsn.DSNGenerator;
@@ -15,19 +15,16 @@ import org.nhindirect.monitor.processor.StreamsDSNMailSender;
 import org.nhindirect.monitor.processor.StreamsDSNMailSenderSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
-@Configuration
-public class MessageGenConfig
+@AutoConfiguration
+public class MessageGenAutoConfiguration
 {	
-	@Autowired
-	protected VariableCompletionCondition variableCompletionCondition;
-	
 	@Autowired
 	protected ProducerTemplate producerTemplate;
 	
@@ -62,21 +59,24 @@ public class MessageGenConfig
 	private String gatewayURL;
 	
 	
+	@ConditionalOnMissingBean
 	@Bean
-	public DefaultDSNFailureTextBodyPartGenerator textBodyGenerator()
+	DefaultDSNFailureTextBodyPartGenerator textBodyGenerator()
 	{
 		return new DefaultDSNFailureTextBodyPartGenerator(header, footer, failedRecipientsTitle, errorMessageTitle, defaultErrorMessage, 
 				HumanReadableTextAssemblerFactory.getInstance());
 	}
 	
+	@ConditionalOnMissingBean
 	@Bean 
-	public DSNGenerator dsnGenerator()
+	DSNGenerator dsnGenerator()
 	{
 		return new DSNGenerator(subjectPrefix);
 	}
 	
+	@ConditionalOnMissingBean
 	@Bean 
-	public DSNMessageGenerator dsnMessageProcessor()
+	DSNMessageGenerator dsnMessageProcessor(VariableCompletionCondition variableCompletionCondition)
 	{
 		return new DSNMessageGenerator(dsnGenerator(), postmaster, variableCompletionCondition, mtaName, textBodyGenerator());
 	}
@@ -87,8 +87,9 @@ public class MessageGenConfig
 		producerTemplate.setDefaultEndpointUri(startURI);
 	}
 	
+	@ConditionalOnMissingBean
 	@Bean 
-	public SMTPClientFactory smtpClientFactory()
+	SMTPClientFactory smtpClientFactory()
 	{
 		return new SMTPClientFactory();
 	}
@@ -96,7 +97,7 @@ public class MessageGenConfig
 	@Bean("dsnSender")
 	@ConditionalOnMissingBean
 	@ConditionalOnProperty(name="direct.msgmonitor.dsnSender.useStreamsSender", havingValue="true")
-	public DSNMailSender streamsDsnSender(Environment env, StreamBridge bridge)
+	DSNMailSender streamsDsnSender(Environment env, StreamBridge bridge)
 	{
 		final StreamsDSNMailSenderSource source = new StreamsDSNMailSenderSource(bridge);
 		
@@ -113,7 +114,7 @@ public class MessageGenConfig
 	@Bean("dsnSender")
 	@ConditionalOnMissingBean
 	@ConditionalOnProperty(name="direct.msgmonitor.dsnSender.useSMTPGatewaySender", havingValue="true")
-	public DSNMailSender smtpDsnSender(Environment env)
+	DSNMailSender smtpDsnSender(Environment env)
 	{
 		// make sure the SMTP Gateway is not enabled
 		if (env.getProperty("direct.msgmonitor.dsnSender.useStreamsSender", "false").compareToIgnoreCase("true") == 0)

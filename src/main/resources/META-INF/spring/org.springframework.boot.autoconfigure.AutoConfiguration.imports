@@ -1,0 +1,5 @@
+org.nhindirect.monitor.autoconfig.AggregatorRepositoryAutoConfiguration
+org.nhindirect.monitor.autoconfig.ConditionAutoConfiguration
+org.nhindirect.monitor.autoconfig.MessageGenAutoConfiguration
+org.nhindirect.monitor.autoconfig.ObjectMapperAutoConfiguration
+org.nhindirect.monitor.autoconfig.ProcessorAutoConfiguration

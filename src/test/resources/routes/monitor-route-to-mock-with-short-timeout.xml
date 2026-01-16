@@ -1,16 +1,16 @@
-<routes xmlns="http://camel.apache.org/schema/spring">
+<routes xmlns="https://camel.apache.org/schema/spring/camel-spring-4.12.0.xsd">
     <route id="direct-reliable">
       <from uri="direct:start"/>
-      <aggregate strategyRef="aggregationStrategy" ignoreInvalidCorrelationKeys="true">
+      <aggregate aggregationStrategy="aggregationStrategy" ignoreInvalidCorrelationKeys="true">
         <correlationExpression>
             <ref>msgIdCorrelator</ref>
         </correlationExpression>
-        <completionPredicate>
-          <method bean="aggregationStrategy" method="isAggregationComplete"/>
+        <completionPredicate> 
+          <method>aggregationStrategy?method=isAggregationComplete</method>
         </completionPredicate>     
-        <completionTimeout>
-          <method bean="aggregationStrategy" method="getAggregationTime"/>
-        </completionTimeout>           
+        <completionTimeoutExpression>
+          <method>aggregationStrategy?method=getAggregationTime</method>
+        </completionTimeoutExpression>               
         <to uri="mock:result"/>
       </aggregate>
     </route>

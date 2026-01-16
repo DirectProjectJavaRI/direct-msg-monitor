@@ -8,9 +8,11 @@ import java.util.UUID;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.impl.DefaultExchange;
+import org.apache.camel.processor.aggregate.AggregateProcessor;
+import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.spi.RecoverableAggregationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +27,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.nhindirect.monitor.util.TestUtils;
 
 @TestPropertySource(locations="classpath:properties/recoveryMonitor.properties", 
-properties = "camel.springboot.xmlRoutes=classpath:distributedAggregatorRoutes/recover-exchange-to-mock.xml")
+properties = "camel.springboot.routes-include-pattern=classpath:distributedAggregatorRoutes/recover-exchange-to-mock.xml")
 public class TestRecoveryMonitorRoute extends SpringBaseTest 
 {
 	@Autowired
@@ -54,6 +56,7 @@ public class TestRecoveryMonitorRoute extends SpringBaseTest
 		
 		mock = (MockEndpoint)context.getEndpoint("mock:result");
 		mock.reset();
+		mock.setLog(true);
 		
 		template = context.createProducerTemplate();
 		
@@ -64,7 +67,8 @@ public class TestRecoveryMonitorRoute extends SpringBaseTest
 		final Tx originalMessage = TestUtils.makeMessage(TxMessageType.IMF, originalMessageId, "", "gm2552@cerner.com", "gm2552@direct.securehealthemail.com,ah4626@direct.securehealthemail.com", "");
 		final Exchange exchange = new DefaultExchange(context);
 		exchange.getIn().setBody(originalMessage);
-
+        exchange.setProperty(ExchangePropertyKey.AGGREGATED_COMPLETED_BY, AggregateProcessor.COMPLETED_BY_FORCE);
+		
 		repo.add(context, originalMessageId, exchange);
 		
 		repo.remove(context, originalMessageId, exchange);
@@ -74,7 +78,6 @@ public class TestRecoveryMonitorRoute extends SpringBaseTest
 		repo.recover(context, exchange.getExchangeId());		
 	}	
 	
-	@SuppressWarnings("deprecation")
 	@Test
 	public void testRecoverFromRepository() throws Exception
 	{		
@@ -100,8 +103,8 @@ public class TestRecoveryMonitorRoute extends SpringBaseTest
 		assertEquals("gm2552@cerner.com", originalMessage.getDetail(TxDetailType.FROM).getDetailValue());
 		
 		// make sure everything got confirmed
-		final AggregationRepository aggRepo = context.getRegistry().lookupByType(AggregationRepository.class).values().iterator().next();
-		final AggregationCompletedRepository aggCompRepo = context.getRegistry().lookupByType(AggregationCompletedRepository.class).values().iterator().next();
+		final AggregationRepository aggRepo = context.getRegistry().findByTypeWithName(AggregationRepository.class).values().iterator().next();
+		final AggregationCompletedRepository aggCompRepo = context.getRegistry().findByTypeWithName(AggregationCompletedRepository.class).values().iterator().next();
 		
 		
 		assertEquals(0,aggRepo.findAllKeys().size());

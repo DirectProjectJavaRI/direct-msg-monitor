@@ -2,6 +2,7 @@ package org.nhindirect.monitor.autoconfig;
 
 import org.nhindirect.monitor.processor.impl.DefaultDuplicateNotificationStateManager;
 import org.nhindirect.monitor.processor.impl.TimeoutDupStateManager;
+import org.nhindirect.monitor.repository.PendingNotificationRepository;
 import org.nhindirect.monitor.repository.ReceivedNotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,10 +15,17 @@ public class ProcessorAutoConfiguration
 {		
 	@Autowired
 	protected ReceivedNotificationRepository recRepo;
-	
-	@Value("${direct.msgmonitor.dupStateDAO.retensionTime:7}")	
+
+	@Autowired
+	protected PendingNotificationRepository pendingRepo;
+
+	@Value("${direct.msgmonitor.dupStateDAO.retensionTime:7}")
 	private String messageRetention;
-	
+
+	@Value("${direct.msgmonitor.pendingStateDAO.retensionTime:24}")
+	private String pendingMessageRetention;
+
+
 	@Value("${direct.msgmonitor.dsnSender.exchange:notifications}")	
 	private String dsnSenderExchange;
 	
@@ -31,8 +39,10 @@ public class ProcessorAutoConfiguration
 		final TimeoutDupStateManager retVal = new TimeoutDupStateManager();
 		
 		retVal.setReceivedNotificationRepository(recRepo);
+		retVal.setPendingNotificationRepository(pendingRepo);
 		retVal.setMessageRetention(Integer.parseInt(messageRetention));
-				
+		retVal.setPendingMessageRetention(Integer.parseInt(pendingMessageRetention));
+
 		return retVal;
 	}
 }

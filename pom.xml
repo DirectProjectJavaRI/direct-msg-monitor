@@ -2,9 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd ">
     <groupId>org.nhind</groupId>    
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>direct-msg-monitor</artifactId>    
+    <artifactId>direct-msg-monitor</artifactId>
     <name>Direct Project message monitor</name>
-    <version>9.0.0-SNAPSHOT</version>
+    <version>9.0.0</version>
     <description>Direct Project message monitor for timely and reliable messaging</description>
     <inceptionYear>2010</inceptionYear>
     <url>http://api.nhindirect.org/x/www/api.nhindirect.org/java/site/direct-msg-monitor/${project.version}</url> 
@@ -82,12 +82,12 @@
 		<dependency>
 			<groupId>org.nhind</groupId>
 			<artifactId>direct-common</artifactId>
-			<version>9.0.0-SNAPSHOT</version>		
-		</dependency>  
+			<version>9.0.0</version>
+		</dependency>
 		<dependency>
 			<groupId>org.nhind</groupId>
 			<artifactId>direct-msg-monitor-model</artifactId>
-			<version>9.0.0-SNAPSHOT</version>
+			<version>9.0.0</version>
 		</dependency>  
 		<dependency>
 		    <groupId>org.apache.commons</groupId>
@@ -296,8 +296,8 @@
 	                </goals>
 	            </execution>
 	        </executions>		        
-	     </plugin>  
-         <!--  for releases only	     
+	     </plugin>
+         <!--  for releases only
 	     <plugin>
              <groupId>org.apache.maven.plugins</groupId>
              <artifactId>maven-gpg-plugin</artifactId>
@@ -310,9 +310,18 @@
                      </goals>
               </execution>
             </executions>
-        </plugin>	    
-         -->               			    
-    </plugins>	    
+        </plugin>
+         -->
+        <plugin>
+          <groupId>org.sonatype.central</groupId>
+          <artifactId>central-publishing-maven-plugin</artifactId>
+          <version>0.8.0</version>
+          <extensions>true</extensions>
+          <configuration>
+            <publishingServerId>central</publishingServerId>
+          </configuration>
+        </plugin>
+    </plugins>
   </build>                        
   <reporting>
 		<plugins>

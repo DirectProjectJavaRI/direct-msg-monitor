@@ -21,6 +21,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.nhindirect.monitor.aggregator.repository;
 
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -31,13 +32,19 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
-import org.apache.camel.component.hawtdb.HawtDBCamelCodec;
 import org.apache.camel.spi.RecoverableAggregationRepository;
-import org.apache.camel.support.ServiceSupport;
+import org.apache.camel.support.DefaultExchange;
+import org.apache.camel.support.DefaultExchangeHolder;
+import org.apache.camel.support.service.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.DataByteArrayInputStream;
+import org.fusesource.hawtbuf.DataByteArrayOutputStream;
+import org.fusesource.hawtbuf.codec.Codec;
+import org.fusesource.hawtbuf.codec.ObjectCodec;
 import org.nhindirect.monitor.entity.Aggregation;
 import org.nhindirect.monitor.entity.AggregationCompleted;
 import org.nhindirect.monitor.repository.AggregationCompletedRepository;
@@ -138,7 +145,7 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
         try 
         {
         	// serialize the exchange to a blob
-            final byte[] blob = codec.marshallExchange(camelContext, exchange, true).getData();
+        	final byte[] blob = codec.marshallExchange(camelContext, exchange, true).getData();
  
             // get the current version of the exchange... if this is the first time the exchange with the
             // given key is added, this should result in null
@@ -365,7 +372,7 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 	public Exchange recover(CamelContext camelContext, String exchangeId) 
 	{
 		Exchange retVal = null;
-
+		
 		try
 		{
 			// recover the exchnage from the repository
@@ -384,7 +391,7 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 			newRecoveryLockTime.add(Calendar.SECOND, recoveredEntityLockInterval);
 			entity.setRecoveryLockedUntilDtTm(newRecoveryLockTime);
 			
-			// persist the time new lock time and increment the update count
+			// persist the new lock time and increment the update count
 			aggCompRepo.save(entity);
 			
 			// deserialize exchange 
@@ -530,6 +537,58 @@ public class ConcurrentJPAAggregationRepository extends ServiceSupport implement
 	{
 		/* no-op */
 	}
+
+	@Override
+	public long getRecoveryInterval() {
+		// TODO Auto-generated method stub
+		return recoveryInterval;
+	}
 	
+	/*
+	 * HawtDB has been deprecated in favor of LevelDB, but the LevelDB Jackson serializer has some limitations.
+	 * This is more or less a copy of the deprecated HawtDBCamelCodec from the older versions of Camel.
+	 */
+	private static class HawtDBCamelCodec {
+	    private Codec<DefaultExchangeHolder> exchangeCodec = new ObjectCodec<>();
+
+
+	    public Buffer marshallExchange(CamelContext camelContext, Exchange exchange, boolean allowSerializedHeaders) throws IOException {
+	        DataByteArrayOutputStream baos = new DataByteArrayOutputStream();
+	        // use DefaultExchangeHolder to marshal to a serialized object
+	        DefaultExchangeHolder pe = DefaultExchangeHolder.marshal(exchange, false, allowSerializedHeaders);
+	        // add the aggregated size and timeout property as the only properties we want to retain
+	        DefaultExchangeHolder.addProperty(pe, Exchange.AGGREGATED_SIZE, exchange.getProperty(Exchange.AGGREGATED_SIZE, Integer.class));
+	        DefaultExchangeHolder.addProperty(pe, Exchange.AGGREGATED_TIMEOUT, exchange.getProperty(Exchange.AGGREGATED_TIMEOUT, Long.class));
+	        // add the aggregated completed by property to retain
+	        DefaultExchangeHolder.addProperty(pe, Exchange.AGGREGATED_COMPLETED_BY, exchange.getProperty(Exchange.AGGREGATED_COMPLETED_BY, String.class));
+	        // add the aggregated correlation key property to retain
+	        DefaultExchangeHolder.addProperty(pe, Exchange.AGGREGATED_CORRELATION_KEY, exchange.getProperty(Exchange.AGGREGATED_CORRELATION_KEY, String.class));
+	        // and a guard property if using the flexible toolbox aggregator
+	        DefaultExchangeHolder.addProperty(pe, Exchange.AGGREGATED_COLLECTION_GUARD, exchange.getProperty(Exchange.AGGREGATED_COLLECTION_GUARD, String.class));
+	        // persist the from endpoint as well
+	        if (exchange.getFromEndpoint() != null) {
+	            DefaultExchangeHolder.addProperty(pe, "CamelAggregatedFromEndpoint", exchange.getFromEndpoint().getEndpointUri());
+	        }
+	        exchangeCodec.encode(pe, baos);
+	        return baos.toBuffer();
+	    }
+
+	    public Exchange unmarshallExchange(CamelContext camelContext, Buffer buffer) throws IOException {
+	        DataByteArrayInputStream bais = new DataByteArrayInputStream(buffer);
+	        DefaultExchangeHolder pe = exchangeCodec.decode(bais);
+	        Exchange answer = new DefaultExchange(camelContext);
+	        DefaultExchangeHolder.unmarshal(answer, pe);
+	        // restore the from endpoint
+	        String fromEndpointUri = (String) answer.removeProperty("CamelAggregatedFromEndpoint");
+	        if (fromEndpointUri != null) {
+	            Endpoint fromEndpoint = camelContext.hasEndpoint(fromEndpointUri);
+	            if (fromEndpoint != null) {
+	            	answer =  DefaultExchange.newFromEndpoint(fromEndpoint);
+	            	DefaultExchangeHolder.unmarshal(answer, pe);
+	            }
+	        }
+	        return answer;
+	    }		
+	}
 	
 }

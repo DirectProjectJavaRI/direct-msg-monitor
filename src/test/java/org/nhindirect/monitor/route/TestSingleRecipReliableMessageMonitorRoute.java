@@ -1,12 +1,8 @@
 package org.nhindirect.monitor.route;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +18,7 @@ import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = "camel.springboot.xmlRoutes=classpath:routes/monitor-route-to-mock.xml")
+@TestPropertySource(properties = "camel.springboot.routes-include-pattern=classpath:routes/monitor-route-to-mock.xml")
 public class TestSingleRecipReliableMessageMonitorRoute extends SpringBaseTest 
 {
 	@Autowired
@@ -55,6 +51,8 @@ public class TestSingleRecipReliableMessageMonitorRoute extends SpringBaseTest
 	@Test
     public void testSingleRecip_MDNProcessedReceived_assertConditionNotComplete() throws Exception 
     {
+		mock.expectedMessageCount(0);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -66,14 +64,14 @@ public class TestSingleRecipReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "gm2552@direct.securehealthemail.com", "", MDNStandard.Disposition_Processed);
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(0, exchanges.size());
+		mock.assertIsSatisfied();
     }	
 	
 	@Test
     public void testSingleRecip_MDNDispatchedReceived_assertConditionNotComplete() throws Exception 
     {
+		mock.expectedMessageCount(0);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -85,15 +83,15 @@ public class TestSingleRecipReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "gm2552@direct.securehealthemail.com", "", MDNStandard.Disposition_Dispatched);
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(0, exchanges.size());
+		mock.assertIsSatisfied();
     }	
 	
 	
 	@Test
     public void testSingleRecip_MDNProcessedAndDisplayedReceived_assertConditionNotComplete() throws Exception 
     {
+		mock.expectedMessageCount(0);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -111,14 +109,14 @@ public class TestSingleRecipReliableMessageMonitorRoute extends SpringBaseTest
 		
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(0, exchanges.size());
+		mock.assertIsSatisfied();
     }	
 	
 	@Test
     public void testSingleRecip_MDNProcessedAndDispatchedReceived_assertConditionComplete() throws Exception 
     {
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -136,14 +134,16 @@ public class TestSingleRecipReliableMessageMonitorRoute extends SpringBaseTest
 		
 		template.sendBody("direct:start", mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
+		template.sendBody("direct:start", mdnMessage);
 		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }	
 	
 	@Test
     public void testSingleRecip_MDNProcessedAndErrorReceived_assertConditionComplete() throws Exception 
     {
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -160,15 +160,14 @@ public class TestSingleRecipReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "gm2552@direct.securehealthemail.com", "", MDNStandard.Disposition_Error);
 		template.sendBody("direct:start", mdnMessage);
 		
-		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }	
 	
 	@Test
     public void testSingleRecip_MDNErrorReceived_assertConditionComplete() throws Exception 
     {
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -180,15 +179,14 @@ public class TestSingleRecipReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "gm2552@direct.securehealthemail.com", "", MDNStandard.Disposition_Error);
 		template.sendBody("direct:start", mdnMessage);
 		
-		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }	
 	
 	@Test
     public void testSingleRecip_MDNDeniedReceived_assertConditionComplete() throws Exception 
     {
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -200,15 +198,14 @@ public class TestSingleRecipReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "gm2552@direct.securehealthemail.com", "", MDNStandard.Disposition_Denied);
 		template.sendBody("direct:start", mdnMessage);
 		
-		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }
 	
 	@Test
     public void testSingleRecip_DSNErroReceived_assertConditionComplete() throws Exception 
     {
+		mock.expectedMessageCount(1);
+		
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
 		
@@ -220,9 +217,6 @@ public class TestSingleRecipReliableMessageMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "gm2552@direct.securehealthemail.com", DSNStandard.DSNAction.FAILED.toString(), "");
 		template.sendBody("direct:start", mdnMessage);
 		
-		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }	
 }

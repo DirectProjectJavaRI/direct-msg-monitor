@@ -11,7 +11,8 @@ import java.util.Collection;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
-import org.apache.camel.impl.DefaultExchange;
+import org.apache.camel.spring.SpringCamelContext;
+import org.apache.camel.support.DefaultExchange;
 
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.monitor.condition.TxCompletionCondition;
@@ -27,7 +28,7 @@ public class BasicTxAggregator_aggregateTest
 		TxCompletionCondition condition = mock(TxCompletionCondition.class);
 		BasicTxAggregator aggr = new BasicTxAggregator(condition, timoutCondition);
 		
-		CamelContext context = mock(CamelContext.class);
+		CamelContext context = new SpringCamelContext();
 		DefaultExchange newExchange = new DefaultExchange(context);
 		
 		Tx tx = mock(Tx.class);
@@ -48,7 +49,7 @@ public class BasicTxAggregator_aggregateTest
 		TxCompletionCondition condition = mock(TxCompletionCondition.class);
 		BasicTxAggregator aggr = new BasicTxAggregator(condition, timoutCondition);
 		
-		CamelContext context = mock(CamelContext.class);
+		CamelContext context = new SpringCamelContext();
 		DefaultExchange oldExchange = new DefaultExchange(context);
 		Tx tx = mock(Tx.class);
 		Collection<Tx> oldTxs = new ArrayList<Tx>();

@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
 @TestPropertySource(locations="classpath:properties/shorttimeout.properties", 
-properties = "camel.springboot.xmlRoutes=classpath:routes/monitor-route-to-mock-with-short-timeout.xml")
+properties = "camel.springboot.routes-include-pattern=classpath:routes/monitor-route-to-mock-with-short-timeout.xml")
 public class TestTimedOutMonitorRoute extends SpringBaseTest  
 {
 	@Autowired

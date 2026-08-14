@@ -19,7 +19,7 @@ import java.util.List;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
-import org.apache.camel.impl.DefaultExchange;
+import org.apache.camel.support.DefaultExchange;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxDetailType;
 import org.nhindirect.common.tx.model.TxMessageType;
@@ -64,9 +64,10 @@ public class ConcurrentJPAAggregationRepository_getTest extends SpringBaseTest
 	public void testGet_emptyRepository_assertNull() throws Exception
 	{
 	
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		assertNull(repo.get(context, "12345"));
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			assertNull(repo.get(context, "12345"));
+		}
 	}
 	
 	@Test
@@ -76,16 +77,17 @@ public class ConcurrentJPAAggregationRepository_getTest extends SpringBaseTest
 		final Exchange exchange = new DefaultExchange(context);
 		exchange.getIn().setBody(tx);
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		repo.add(context, "12345", exchange);
-		
-		final Exchange ex = repo.get(context, "12345");
-		assertNotNull(ex);
-		final Tx retrievedTx = (Tx)ex.getIn().getBody();
-		assertEquals("12345", retrievedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
-		final Integer version = (Integer)ex.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
-		assertEquals(0, version.intValue());
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			repo.add(context, "12345", exchange);
+			
+			final Exchange ex = repo.get(context, "12345");
+			assertNotNull(ex);
+			final Tx retrievedTx = (Tx)ex.getIn().getBody();
+			assertEquals("12345", retrievedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
+			final Integer version = (Integer)ex.getProperty(ConcurrentJPAAggregationRepository.AGGREGATION_ENTITY_VERSON);
+			assertEquals(0, version.intValue());			
+		}
 	}
 	
 	@Test
@@ -100,18 +102,18 @@ public class ConcurrentJPAAggregationRepository_getTest extends SpringBaseTest
 		final Exchange exchange = new DefaultExchange(context);
 		exchange.getIn().setBody(txs);
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		repo.add(context, "12345", exchange);
-		
-		final Exchange ex = repo.get(context, "12345");
-		assertNotNull(ex);
-		
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120)){
+			repo.add(context, "12345", exchange);
+			
+			final Exchange ex = repo.get(context, "12345");
+			assertNotNull(ex);
+			
 
-		final Collection<Tx> retrievedTxs = (Collection<Tx>)ex.getIn().getBody();
-		assertEquals(2, retrievedTxs.size());
-		
-		assertEquals("12345", retrievedTxs.iterator().next().getDetail(TxDetailType.MSG_ID).getDetailValue());
+			final Collection<Tx> retrievedTxs = (Collection<Tx>)ex.getIn().getBody();
+			assertEquals(2, retrievedTxs.size());
+			
+			assertEquals("12345", retrievedTxs.iterator().next().getDetail(TxDetailType.MSG_ID).getDetailValue());			
+		}
 	}
 	
 	@Test
@@ -121,18 +123,19 @@ public class ConcurrentJPAAggregationRepository_getTest extends SpringBaseTest
 		AggregationRepository dao = mock(AggregationRepository.class);
 		doThrow(new RuntimeException()).when(dao).findOne((Example<Aggregation>)any());
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(dao, aggCompRepo, 120);
-		
-		boolean exceptionOccured = false;
-		try
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(dao, aggCompRepo, 120))
 		{
-			repo.get(context, "12345");
+			boolean exceptionOccured = false;
+			try
+			{
+				repo.get(context, "12345");
+			}
+			catch(RuntimeException e)
+			{
+				exceptionOccured = true;
+			}
+			
+			assertTrue(exceptionOccured);
 		}
-		catch(RuntimeException e)
-		{
-			exceptionOccured = true;
-		}
-		
-		assertTrue(exceptionOccured);
 	}	
 }

@@ -51,37 +51,17 @@ public class BasicTxAggregator_getAggregationTimeTest
 		
 		Message msg = mock(Message.class);
 		when(msg.getBody(Collection.class)).thenReturn(null);
+		when(msg.getMessageTimestamp()).thenReturn(0L);
 		
 		Exchange exchange = mock(Exchange.class);
 		when(exchange.getIn()).thenReturn(msg);
+		when(exchange.getMessage()).thenReturn(msg);
 		
 		assertNull(aggr.getAggregationTime(exchange));
 		
-		verify(exchange, never()).getProperty(Exchange.CREATED_TIMESTAMP, Date.class);
+		verify(msg, never()).getMessageTimestamp();
 	}
 	
-	@Test
-	public void testIsComplete_txsExists_emptyInitialTimeProperty_assertNull()
-	{
-		TxTimeoutCondition condition = mock(TxTimeoutCondition.class);
-		
-		BasicTxAggregator aggr = new BasicTxAggregator(null, condition);
-		
-
-		Tx tx = mock(Tx.class);
-		Collection<Tx> oldTxs = new ArrayList<Tx>();
-		oldTxs.add(tx);
-		Message msg = mock(Message.class);
-		when(msg.getBody(Collection.class)).thenReturn(oldTxs);
-		
-		Exchange exchange = mock(Exchange.class);
-		when(exchange.getIn()).thenReturn(msg);
-		when(exchange.getProperty(Exchange.CREATED_TIMESTAMP, Date.class)).thenReturn(null);
-		
-		assertNull(aggr.getAggregationTime(exchange));
-		
-		verify(exchange, times(1)).getProperty(Exchange.CREATED_TIMESTAMP, Date.class);
-	}
 	
 	@SuppressWarnings("unchecked")
 	@Test
@@ -99,13 +79,14 @@ public class BasicTxAggregator_getAggregationTimeTest
 		oldTxs.add(tx);
 		Message msg = mock(Message.class);
 		when(msg.getBody(Collection.class)).thenReturn(oldTxs);
+		when(msg.getMessageTimestamp()).thenReturn(theDate.getTime());
 		
 		Exchange exchange = mock(Exchange.class);
 		when(exchange.getIn()).thenReturn(msg);
-		when(exchange.getProperty(Exchange.CREATED_TIMESTAMP, Date.class)).thenReturn(theDate);
+		when(exchange.getMessage()).thenReturn(msg);
 		
 		assertEquals(Long.valueOf(1000), aggr.getAggregationTime(exchange));
 		
-		verify(exchange, times(1)).getProperty(Exchange.CREATED_TIMESTAMP, Date.class);
+		verify(msg, times(1)).getMessageTimestamp();
 	}
 }

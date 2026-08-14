@@ -1,6 +1,6 @@
 package org.nhindirect.monitor.processor;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.camel.Exchange;
 

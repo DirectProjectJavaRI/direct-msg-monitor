@@ -49,7 +49,7 @@ public class TxsResource_addTxTest
 
 		ResponseEntity<Mono<Void>> res = resource.addTx(tx);
 		
-		assertEquals(500, res.getStatusCodeValue());
+		assertEquals(500, res.getStatusCode().value());
 	}
 	
 	@Test
@@ -63,6 +63,6 @@ public class TxsResource_addTxTest
 		
 		ResponseEntity<Mono<Void>> res = resource.addTx(tx);
 		
-		assertEquals(201, res.getStatusCodeValue());
+		assertEquals(201, res.getStatusCode().value());
 	}
 }

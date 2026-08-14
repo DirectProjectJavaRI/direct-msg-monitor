@@ -2,16 +2,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd ">
     <groupId>org.nhind</groupId>    
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>direct-msg-monitor</artifactId>    
+    <artifactId>direct-msg-monitor</artifactId>
     <name>Direct Project message monitor</name>
-    <version>8.1.0</version>
+    <version>9.0.0</version>
     <description>Direct Project message monitor for timely and reliable messaging</description>
     <inceptionYear>2010</inceptionYear>
     <url>http://api.nhindirect.org/x/www/api.nhindirect.org/java/site/direct-msg-monitor/${project.version}</url> 
     <parent>
 	   <groupId>org.springframework.boot</groupId>
 	   <artifactId>spring-boot-dependencies</artifactId>
-	   <version>2.5.2</version>
+	   <version>4.1.0</version>
 	   <relativePath />
     </parent>	   
     <developers>
@@ -43,37 +43,22 @@
   </licenses>      
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<camel.version>2.22.0</camel.version>
-        <javax-mail.version>1.6.2</javax-mail.version>
-        <dsn.version>1.6.7</dsn.version>	
-        <commons-io.version>2.8.0</commons-io.version>     
-        <commons-collections4.version>4.4</commons-collections4.version>   
-        <mina.version>1.0.9</mina.version> 	
-        <camel-hawtdb.version>2.19.5</camel-hawtdb.version>
+		<camel.version>4.12.0</camel.version>  
+        <commons-collections4.version>4.5.0</commons-collections4.version>
+        <commons-net.version>3.12.0</commons-net.version>
+        <camel-hawtdb.version>2.25.4</camel-hawtdb.version>
         <hawtbuf.version>1.7</hawtbuf.version>
         <hawtdb.version>1.6</hawtdb.version>
 	</properties>  
 	<dependencyManagement>
-		<dependencies>
-		  <dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-dependencies</artifactId>
-				<version>2.5.2</version>
-				<type>pom</type>
-				<scope>import</scope>
-		  </dependency>		
+		<dependencies>	
 		  <dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-starter-parent</artifactId>
-				<version>2020.0.3</version>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>2025.1.2</version>
 				<type>pom</type>
 				<scope>import</scope>
-		  </dependency>  		   			  		  			
-          <dependency>
-            <groupId>org.apache.mina</groupId>
-            <artifactId>mina-core</artifactId>
-            <version>${mina.version}</version>
-          </dependency>                  					
+		  </dependency>                					
 		</dependencies>
 	</dependencyManagement>       
     <dependencies>  
@@ -92,40 +77,18 @@
 	    <dependency>
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-data-jpa</artifactId>
-	    </dependency>								
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-		</dependency>	 
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-entitymanager</artifactId>		
-		</dependency>						  
+	    </dependency>
+    													  
 		<dependency>
 			<groupId>org.nhind</groupId>
 			<artifactId>direct-common</artifactId>
-			<version>8.1.0</version>		
-		</dependency>  
+			<version>9.0.0</version>
+		</dependency>
 		<dependency>
 			<groupId>org.nhind</groupId>
 			<artifactId>direct-msg-monitor-model</artifactId>
-			<version>8.1.0</version>		
-		</dependency> 		    
-		<dependency>
-			<groupId>com.sun.mail</groupId>
-			<artifactId>javax.mail</artifactId>
-			<version>${javax-mail.version}</version>
-		</dependency>				 
-		<dependency>
-			<groupId>com.sun.mail</groupId>
-			<artifactId>dsn</artifactId>
-			<version>${dsn.version}</version>
-		</dependency>		  	 
-	    <dependency>
-	    	<groupId>commons-io</groupId>
-	    	<artifactId>commons-io</artifactId>
-	    	<version>${commons-io.version}</version>
-	    </dependency>	 
+			<version>9.0.0</version>
+		</dependency>  
 		<dependency>
 		    <groupId>org.apache.commons</groupId>
 		    <artifactId>commons-collections4</artifactId>
@@ -158,25 +121,20 @@
             <version>${camel.version}</version>
           </dependency>   
           <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-spring-boot</artifactId>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-spring-boot-starter</artifactId>
             <version>${camel.version}</version>
-          </dependency>             
+          </dependency>  
+          <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-xml-io-dsl-starter</artifactId>
+            <version>${camel.version}</version>
+          </dependency>                      
 	      <dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
-			<version>3.6</version>
-		  </dependency>	 
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-spring-boot-starter</artifactId>
-		    <version>${camel.version}</version>
-		</dependency>	      	     
-	     <dependency>
-	        <groupId>org.apache.camel</groupId>
-	        <artifactId>camel-hawtdb</artifactId>
-	        <version>${camel-hawtdb.version}</version>   
-	    </dependency>	    
+			<version>${commons-net.version}</version>
+		  </dependency>	       	     	    
 	     <dependency>
 	        <groupId>org.fusesource.hawtbuf</groupId>
 	        <artifactId>hawtbuf</artifactId>
@@ -190,16 +148,19 @@
 	    <!--  test jars -->	
 		<dependency>
 		    <groupId>org.springframework.cloud</groupId>
-		    <artifactId>spring-cloud-stream</artifactId>
-		    <type>test-jar</type>
+		    <artifactId>spring-cloud-stream-test-binder</artifactId>
 		    <scope>test</scope>
-		    <classifier>test-binder</classifier>
 		</dependency>	
 	    <dependency>
 	        <groupId>org.springframework.cloud</groupId>
 	        <artifactId>spring-cloud-starter-stream-rabbit</artifactId>  
 		    <scope>test</scope>     
-	    </dependency>			    
+	    </dependency>	
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+		    <scope>test</scope>
+		</dependency>	    		    
 		<dependency>
 		    <groupId>com.h2database</groupId>
 		    <artifactId>h2</artifactId>
@@ -215,18 +176,12 @@
 			<artifactId>hsqldb</artifactId>
 			<scope>test</scope>
 		</dependency>	
-	      <dependency>
-	        <groupId>org.apache.camel</groupId>
-	        <artifactId>camel-test</artifactId>
-	        <version>${camel.version}</version>
-            <scope>test</scope>	        
-	     </dependency>	
-	      <dependency>
-	        <groupId>org.apache.camel</groupId>
-	        <artifactId>camel-test-spring</artifactId>
-	        <version>${camel.version}</version>
-            <scope>test</scope>	        
-	     </dependency>						    	    	  																        	     																																																																																														
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-test-spring-junit5</artifactId>
+            <scope>test</scope>
+            <version>${camel.version}</version>
+        </dependency>					    	    	  																        	     																																																																																														
   </dependencies>      
   <build>
   	<extensions>
@@ -286,8 +241,8 @@
 			<optimize>true</optimize>
 			<showDeprecation>true</showDeprecation>
 			<encoding>UTF-8</encoding>
-			<source>1.8</source>
-			<target>1.8</target>
+			<source>17</source>
+			<target>17</target>
 		</configuration>
 	</plugin>	     
       <plugin>
@@ -328,7 +283,7 @@
 				<docfilessubdirs>true</docfilessubdirs>
 				<detectJavaApiLink>true</detectJavaApiLink>
 				<detectLinks>true</detectLinks>
-				<source>1.8</source>
+				<source>17</source>
 				<show>public</show>
 				<doclint>none</doclint>
 	        </configuration>
@@ -341,8 +296,8 @@
 	                </goals>
 	            </execution>
 	        </executions>		        
-	     </plugin>  
-         <!--  for releases only	     
+	     </plugin>
+         <!--  for releases only
 	     <plugin>
              <groupId>org.apache.maven.plugins</groupId>
              <artifactId>maven-gpg-plugin</artifactId>
@@ -355,9 +310,18 @@
                      </goals>
               </execution>
             </executions>
-        </plugin>	    
-         -->               			    
-    </plugins>	    
+        </plugin>
+         -->
+        <plugin>
+          <groupId>org.sonatype.central</groupId>
+          <artifactId>central-publishing-maven-plugin</artifactId>
+          <version>0.8.0</version>
+          <extensions>true</extensions>
+          <configuration>
+            <publishingServerId>central</publishingServerId>
+          </configuration>
+        </plugin>
+    </plugins>
   </build>                        
   <reporting>
 		<plugins>
@@ -375,7 +339,7 @@
 				<docfilessubdirs>true</docfilessubdirs>
 				<detectJavaApiLink>true</detectJavaApiLink>
 				<detectLinks>true</detectLinks>
-				<source>1.8</source>
+				<source>17</source>
 				<show>public</show>
 		        <excludePackageNames>
 		            org.nhindirect.monitor.dao.impl:org.nhindirect.monitor.processor.impl:org.nhindirect.monitor.repository:org.nhindirect.monitor.springconfig
@@ -386,7 +350,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
        			<configuration>
-          			<targetJdk>1.8</targetJdk>
+          			<targetJdk>17</targetJdk>
         		</configuration>					
 			</plugin>
 		    <plugin>
@@ -396,7 +360,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jxr-plugin</artifactId>
-				<version>3.1.1</version>
 			</plugin>
 	        <plugin>
 	            <groupId>org.codehaus.mojo</groupId> 

@@ -1,17 +1,20 @@
-package org.nhindirect.monitor.springconfig;
+package org.nhindirect.monitor.autoconfig;
 
 import org.nhindirect.monitor.aggregator.repository.ConcurrentJPAAggregationRepository;
 import org.nhindirect.monitor.repository.AggregationCompletedRepository;
 import org.nhindirect.monitor.repository.AggregationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-@Configuration
+@AutoConfiguration
+@ComponentScan( basePackages= {"org.nhindirect.monitor.resources"})
 @EnableJpaRepositories("org.nhindirect.monitor.repository")
-public class AggregatorRepositoryConfig
+public class AggregatorRepositoryAutoConfiguration
 {
 	@Autowired
 	protected AggregationRepository aggRepo;
@@ -31,8 +34,9 @@ public class AggregatorRepositoryConfig
     @Value("${monitor.aggregatorRepository.recoveryLockInterval:120}")
     protected int recoveredEntityLockInterval;
 	
+    @ConditionalOnMissingBean
 	@Bean
-	public ConcurrentJPAAggregationRepository directMonitoringRepo()
+	ConcurrentJPAAggregationRepository directMonitoringRepo()
 	{
 		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository();
 		

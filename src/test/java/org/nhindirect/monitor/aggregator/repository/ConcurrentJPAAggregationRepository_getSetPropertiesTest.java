@@ -13,54 +13,54 @@ public class ConcurrentJPAAggregationRepository_getSetPropertiesTest
 {
 
 	@Test
-	public void testGetSetRecoveryInterval()
+	public void testGetSetRecoveryInterval() throws Exception
 	{
-		ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository();
-		
-		assertEquals(5000, repo.getRecoveryIntervalInMillis());
-		
-		repo.setRecoveryInterval(10);
-		assertEquals(10, repo.getRecoveryIntervalInMillis());
-		
-		repo.setRecoveryInterval(10, TimeUnit.SECONDS);
-		assertEquals(10000, repo.getRecoveryIntervalInMillis());
-		
+		try (ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository())
+		{
+			assertEquals(5000, repo.getRecoveryIntervalInMillis());
+			
+			repo.setRecoveryInterval(10);
+			assertEquals(10, repo.getRecoveryIntervalInMillis());
+			
+			repo.setRecoveryInterval(10, TimeUnit.SECONDS);
+			assertEquals(10000, repo.getRecoveryIntervalInMillis());
+		}
 	}
 	
 	
 	@Test
-	public void testGetSetUseRecover()
+	public void testGetSetUseRecover() throws Exception
 	{
-		ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository();
-		
-		repo.setUseRecovery(true);
-		assertTrue(repo.isUseRecovery());
-		
-		repo.setUseRecovery(false);
-		assertFalse(repo.isUseRecovery());
-		
+		try (ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository())
+		{
+			repo.setUseRecovery(true);
+			assertTrue(repo.isUseRecovery());
+			
+			repo.setUseRecovery(false);
+			assertFalse(repo.isUseRecovery());
+		}
 	}
 	
 	@Test
-	public void testGetSetDeadLetterQueue()
+	public void testGetSetDeadLetterQueue() throws Exception
 	{
-		ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository();
-		
-		repo.setDeadLetterUri("http://cerner.com");
-		assertEquals("http://cerner.com", repo.getDeadLetterUri());
-		
+		try (ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository())
+		{
+			repo.setDeadLetterUri("http://cerner.com");
+			assertEquals("http://cerner.com", repo.getDeadLetterUri());	
+		}
 	}
 	
 	@Test
-	public void testGetSetMaxDeliveries()
+	public void testGetSetMaxDeliveries() throws Exception
 	{
-		ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository();
-		
-		repo.setMaximumRedeliveries(10);
-		assertEquals(10, repo.getMaximumRedeliveries());
-		
-		repo.setMaximumRedeliveries(100);
-		assertEquals(100, repo.getMaximumRedeliveries());
-		
+		try (ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository())
+		{
+			repo.setMaximumRedeliveries(10);
+			assertEquals(10, repo.getMaximumRedeliveries());
+			
+			repo.setMaximumRedeliveries(100);
+			assertEquals(100, repo.getMaximumRedeliveries());
+		}		
 	}
 }

@@ -15,7 +15,7 @@ import java.util.UUID;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
-import org.apache.camel.impl.DefaultExchange;
+import org.apache.camel.support.DefaultExchange;
 import org.nhindirect.common.tx.model.Tx;
 import org.nhindirect.common.tx.model.TxDetailType;
 import org.nhindirect.common.tx.model.TxMessageType;
@@ -55,30 +55,31 @@ public class ConcurrentJPAAggregationRepository_removeTest extends SpringBaseTes
 	}
 
 	@Test
-	public void testRemove_exchangeNotInRepo_assertException()
+	public void testRemove_exchangeNotInRepo_assertException() throws Exception
 	{
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Exchange exchange = new DefaultExchange(context);
 		exchange.getIn().setBody(tx);
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		boolean exceptionOccured = false;
-		
-		try
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
 		{
-			repo.remove(context, "12345", exchange);
+			boolean exceptionOccured = false;
+			
+			try
+			{
+				repo.remove(context, "12345", exchange);
+			}
+			catch (RuntimeException e)
+			{
+				exceptionOccured = true;
+			}
+			
+			assertTrue(exceptionOccured);			
 		}
-		catch (RuntimeException e)
-		{
-			exceptionOccured = true;
-		}
-		
-		assertTrue(exceptionOccured);
 	}
 	
 	@Test
-	public void testRemove_exchangeInRepo_assertRemovedAndCompletedAdded()
+	public void testRemove_exchangeInRepo_assertRemovedAndCompletedAdded() throws Exception
 	{
 		final Tx tx = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Exchange exchange = new DefaultExchange(context);
@@ -88,25 +89,26 @@ public class ConcurrentJPAAggregationRepository_removeTest extends SpringBaseTes
 		
 		exchange.getIn().setBody(tx);
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		repo.add(context, "12345", exchange);
-		
-		repo.remove(context, "12345", exchange);
-		
-		final Exchange ex = repo.get(context, "12345");
-		
-		assertNull(ex);
-		
-		final Exchange completedExchange = repo.recover(context, exchange.getExchangeId());
-		assertNotNull(completedExchange);
-		final Tx completedTx = (Tx)completedExchange.getIn().getBody();
-		assertEquals("12345", completedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			repo.add(context, "12345", exchange);
+			
+			repo.remove(context, "12345", exchange);
+			
+			final Exchange ex = repo.get(context, "12345");
+			
+			assertNull(ex);
+			
+			final Exchange completedExchange = repo.recover(context, exchange.getExchangeId());
+			assertNotNull(completedExchange);
+			final Tx completedTx = (Tx)completedExchange.getIn().getBody();
+			assertEquals("12345", completedTx.getDetail(TxDetailType.MSG_ID).getDetailValue());
+		}
 	}
 	
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testRemove_exchangeWithCollectionBodyInRepo_assertRemovedAndCompletedAdded()
+	public void testRemove_exchangeWithCollectionBodyInRepo_assertRemovedAndCompletedAdded() throws Exception
 	{
 		final Tx tx1 = TestUtils.makeMessage(TxMessageType.IMF, "12345", "", "me@test.com", "you@test.com", "", "", "");
 		final Tx tx2 = TestUtils.makeMessage(TxMessageType.IMF, "67890", "", "me@test2.com", "you@test2.com", "", "", "");
@@ -117,21 +119,22 @@ public class ConcurrentJPAAggregationRepository_removeTest extends SpringBaseTes
 		exchange.getIn().setBody(txs);
 		
 		
-		final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120);
-		
-		repo.add(context, "12345", exchange);
-		
-		repo.remove(context, "12345", exchange);
-		
-		assertNull(repo.get(context, "12345"));
-		
-		final Exchange completedExchange = repo.recover(context, exchange.getExchangeId());
-		assertNotNull(completedExchange);
-		
+		try (final ConcurrentJPAAggregationRepository repo = new ConcurrentJPAAggregationRepository(aggRepo, aggCompRepo, 120))
+		{
+			repo.add(context, "12345", exchange);
+			
+			repo.remove(context, "12345", exchange);
+			
+			assertNull(repo.get(context, "12345"));
+			
+			final Exchange completedExchange = repo.recover(context, exchange.getExchangeId());
+			assertNotNull(completedExchange);
+			
 
-		final Collection<Tx> retrievedTxs = (Collection<Tx>)completedExchange.getIn().getBody();
-		assertEquals(2, retrievedTxs.size());
-		
-		assertEquals("12345", retrievedTxs.iterator().next().getDetail(TxDetailType.MSG_ID).getDetailValue());
+			final Collection<Tx> retrievedTxs = (Collection<Tx>)completedExchange.getIn().getBody();
+			assertEquals(2, retrievedTxs.size());
+			
+			assertEquals("12345", retrievedTxs.iterator().next().getDetail(TxDetailType.MSG_ID).getDetailValue());		
+		}
 	}
 }

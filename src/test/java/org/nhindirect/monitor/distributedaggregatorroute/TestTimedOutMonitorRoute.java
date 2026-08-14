@@ -24,7 +24,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.nhindirect.monitor.util.TestUtils;
 
 @TestPropertySource(locations="classpath:properties/shorttimeout.properties", 
-properties = "camel.springboot.xmlRoutes=classpath:routes/monitor-route-to-mock-with-short-timeout.xml")
+properties = "camel.springboot.routes-include-pattern=classpath:routes/monitor-route-to-mock-with-short-timeout.xml")
 public class TestTimedOutMonitorRoute extends SpringBaseTest 
 {
 	@Autowired
@@ -64,6 +64,37 @@ public class TestTimedOutMonitorRoute extends SpringBaseTest
 		Tx originalMessage = TestUtils.makeMessage(TxMessageType.IMF, originalMessageId, "", "gm2552@cerner.com", "gm2552@direct.securehealthemail.com", "");
 		template.sendBody("direct:start", originalMessage);
 
+		// no MDN sent... messages should timeout after 2 seconds
+		// sleep 3 seconds to make sure it completes
+		Thread.sleep(3000);
+		
+		List<Exchange> exchanges = mock.getReceivedExchanges();
+		
+		assertEquals(1, exchanges.size());
+		Exchange exchange = exchanges.iterator().next();
+		assertEquals("timeout", exchange.getProperty(Exchange.AGGREGATED_COMPLETED_BY));
+	}
+	
+	@Test
+	public void testTimeoutNonReliableMessage_incorrectFinalRecip_conditionNotComplete_assertTimedOut() throws Exception
+	{
+
+		// send original message
+		final String originalMessageId = UUID.randomUUID().toString();
+
+		Tx originalMessage = TestUtils.makeMessage(TxMessageType.IMF, originalMessageId, "", "gm2552@cerner.com", "gm2552@direct.securehealthemail.com", "");
+		template.sendBody("direct:start", originalMessage);
+
+		
+		// sleep .5 second then send the next part of the message
+		Thread.sleep(500);
+		
+		// send MDN processed to original message with wrong final recipient
+		Tx mdnMessage = TestUtils.makeMessage(TxMessageType.MDN, UUID.randomUUID().toString(), originalMessageId, "gm2552@direct.securehealthemail.com", 
+				"gm2552@cerner.com", "gm2552@cerner.com", "", MDNStandard.Disposition_Processed);
+		template.sendBody("direct:start", mdnMessage);
+
+		
 		// no MDN sent... messages should timeout after 2 seconds
 		// sleep 3 seconds to make sure it completes
 		Thread.sleep(3000);

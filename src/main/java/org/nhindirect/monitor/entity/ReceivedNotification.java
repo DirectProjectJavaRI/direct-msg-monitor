@@ -24,16 +24,15 @@ package org.nhindirect.monitor.entity;
 import java.util.Calendar;
 import java.util.Locale;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
-import org.hibernate.annotations.Index;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Index;
 
 /**
  * DAO entity object for received notification state.
@@ -42,7 +41,8 @@ import org.hibernate.annotations.Index;
  */
 @SuppressWarnings("deprecation")
 @Entity
-@Table(name = "receivednotification")
+@Table(name = "receivednotification", indexes = {@Index(name="i_messageid", columnList="messageid"), @Index(name="i_address", columnList="address"), 
+	    @Index(name="i_receivedtime",columnList="receivedtime")})
 public class ReceivedNotification 
 {
     private long id = 0L;
@@ -86,7 +86,6 @@ public class ReceivedNotification
 	 * Gets the message id
 	 * @return The message id
 	 */
-    @Index(name="i_messageid")
     @Column(name = "messageid", nullable = false)
 	public String getMessageid()
 	{
@@ -106,7 +105,6 @@ public class ReceivedNotification
      * Gets the email address of the final recipient of the notification message
      * @return The email address of the final recipient of the notification message
      */
-    @Index(name="i_address")
     @Column(name = "address", nullable = false)
     public String getAddress()
     {
@@ -126,7 +124,6 @@ public class ReceivedNotification
      * Gets the time the message was received by the system.
      * @return The time the message was received by the system.
      */
-    @Index(name="i_receivedtime")
     @Column(name = "receivedtime")
     @Temporal(TemporalType.TIMESTAMP)
     public Calendar getReceivedTime()

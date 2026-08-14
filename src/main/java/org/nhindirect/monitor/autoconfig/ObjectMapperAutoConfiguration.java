@@ -1,17 +1,17 @@
-package org.nhindirect.monitor.springconfig;
+package org.nhindirect.monitor.autoconfig;
 
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@Configuration
-public class ObjectMapperConfig
+@AutoConfiguration
+public class ObjectMapperAutoConfiguration
 {
 	@ConditionalOnMissingBean
 	@Bean
-	public ObjectMapper objectMapper()
+	ObjectMapper objectMapper()
 	{
 		return new ObjectMapper();
 	}

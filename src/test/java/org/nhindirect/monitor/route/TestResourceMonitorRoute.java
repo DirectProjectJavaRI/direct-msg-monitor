@@ -1,12 +1,8 @@
 package org.nhindirect.monitor.route;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +17,7 @@ import org.nhindirect.monitor.util.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = "camel.springboot.xmlRoutes=classpath:routes/monitor-route-to-mock-with-configured-template.xml")
+@TestPropertySource(properties = "camel.springboot.routes-include-pattern=classpath:routes/monitor-route-to-mock-with-configured-template.xml")
 public class TestResourceMonitorRoute extends SpringBaseTest 
 {
 	@Autowired
@@ -55,6 +51,8 @@ public class TestResourceMonitorRoute extends SpringBaseTest
     public void testSingleRecipMDNReceived_assertConditionComplete() throws Exception 
     {
 
+		mock.expectedMessageCount(1);
+		
 		template.setDefaultEndpointUri("direct:start");
 		// send original message
 		final String originalMessageId = UUID.randomUUID().toString();	
@@ -69,8 +67,6 @@ public class TestResourceMonitorRoute extends SpringBaseTest
 				"gm2552@cerner.com", "gm2552@direct.securehealthemail.com");
 		resource.addTx(mdnMessage);
 		
-		List<Exchange> exchanges = mock.getReceivedExchanges();
-		
-		assertEquals(1, exchanges.size());
+		mock.assertIsSatisfied();
     }
 }

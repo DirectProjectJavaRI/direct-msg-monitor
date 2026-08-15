@@ -1,3 +1,7 @@
+---
+title: Correlation Component
+---
+
 # Correlation Component
 
 The correlation component is responsible for determining which messages should be aggregate together. The default monitoring deployment uses MessageIdCorrelationExpression class correlate direct messages and notifications together.

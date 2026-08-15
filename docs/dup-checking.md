@@ -1,3 +1,7 @@
+---
+title: Notification Duplication Checking
+---
+
 # Notification Duplication Checking
 
 The implementation guide for delivery notification specifies that once a delivery notification message is delivered to the edge client, no other notifications should be sent. This essentially 'closes' the notification state. NOTE: This does not apply to MDNs for display purposes (read receipts). Read receipts are explicitly requested for knowing when the recipients read the message and are not considered a delivery notification by the implementation guide.

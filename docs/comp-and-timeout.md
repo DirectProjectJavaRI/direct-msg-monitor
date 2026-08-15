@@ -1,3 +1,7 @@
+---
+title: Completion and Timeout Condition Components
+---
+
 # Completion and Timeout Condition Components
 
 The completion condition component determines if all notification messages have been received for a message. It can also determine which recipients of the original message have not received all of the required notification message. Additionally, the timeout condition component determines how long a particular aggregated set of messages can remain in the system.

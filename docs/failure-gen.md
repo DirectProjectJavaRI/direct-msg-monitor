@@ -1,3 +1,7 @@
+---
+title: Message Failure Generation
+---
+
 # Message Failure Generation
 
 The value proposition of the message monitor is to generate failure notifications if notifications are not received in a timely manner. If a timeout occurs, the monitor must generate an appropriate failure notification that will delivere to the original message's edge client.

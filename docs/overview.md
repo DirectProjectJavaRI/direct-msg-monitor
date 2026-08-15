@@ -1,3 +1,7 @@
+---
+title: Monitoring Overview
+---
+
 # Monitoring Overview
 
 The Direct project specification as outline by the applicability statement for secure health [transport](http://wiki.directproject.org/w/images/e/e6/Applicability_Statement_for_Secure_Health_Transport_v1.2.pdf) does not explicitly list requirements for message quality of service. However, section 3.0 indicates that Direct implementations may use additional notifications to indicate confirmation of receipt or message delivery. The Direct Project implementation guide for delivery [notification](http://wiki.directproject.org/w/images/a/a1/Implementation_Guide_for_Delivery_Notification_in_Direct_v1.0.pdf) describes specific notification messages and message sequences to validate (from the senders perspective) that a message was delivered to its final destination. In addition, the implementation guide provides eight possible use cases with accompanying diagrams that describe successful and failed message flows. Of the failure flows, some use cases outline scenarios where the receiving HISP goes "radio silent" on the sending HISP. In these scenarios, the sending HISP must be aware that the messages are in a pending notification state, and should only stay that way for a certain time period (hence timely delivery). This is where the role of monitoring becomes important; some entity in the sending HISP must be watching for the lack of notifications messages from the receiving HISP.

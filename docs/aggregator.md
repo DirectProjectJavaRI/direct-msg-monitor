@@ -1,3 +1,7 @@
+---
+title: Aggregator Component
+---
+
 # Aggregator Component
 
 The aggregator component groups correlated messages together into a single data structure. The default monitoring deployment uses BasicTxAggregator class to group messages into a collection of message monitoring structures.

@@ -1,3 +1,7 @@
+---
+title: Deployment Considerations
+---
+
 # Deployment Considerations
 
 The default deployment makes some assumptions about the deployment model. It assumes a single instance of the monitoring service running a local derby database. For a scalable and highly available service, configuration of a separated RDBMS is necessary. By default, the service supports PostgreSQL, MySQL, and Oracle.  The following sections outline some considerations for moving to scalable and highly available deployment model.

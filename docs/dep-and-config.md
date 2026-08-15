@@ -1,14 +1,18 @@
+---
+title: Deployment and Configuration
+---
+
 # Deployment and Configuration
 
 The monitoring service is typically deployed as a RESTful web service using two differnt models:
 
-* In a J2EE container such as Apache Tomcat. The service is packaged in a war file named direct-msg-monitor-web-<version>.war. The application context is determined by the deployer and web container. To validate deployment, the service contains a simple health check URI that can be accessed by simply pointing a browser to the following URI.  If the monitor service is running, the service will return a simple HTML page indicating that the service is running.
+* In a J2EE container such as Apache Tomcat. The service is packaged in a war file named direct-msg-monitor-web-`<version>`.war. The application context is determined by the deployer and web container. To validate deployment, the service contains a simple health check URI that can be accessed by simply pointing a browser to the following URI.  If the monitor service is running, the service will return a simple HTML page indicating that the service is running.
 
 ```
 http://<server:port>/<application context>/health
 ```
 
-* As a standalone SpringBoot microservice application.  The service is package in a SpringBoot jar named direct-msg-monitor-sboot-<version>.jar.  The application is can be run by running the following command.  
+* As a standalone SpringBoot microservice application.  The service is package in a SpringBoot jar named direct-msg-monitor-sboot-`<version>`.jar.  The application is can be run by running the following command.  
 
 ```
 java -jar direct-msg-monitor-sboot-<version>.jar
@@ -18,7 +22,7 @@ Using the SpringBoot option, it also possible to deploy to platforms such as Clo
 
 ## Service Configuration
 
-The service defines Spring bean Java classes as part of its default configuration.  The default bean configuration is generally fine for most deployments leaving other deployment type decisions such as database connections to be configured in a properties file.  Almost all of the configurable parameters are externalized into a properties file named bootstrap.properties under the <app home>/WEB-INF/classes directory if deployed into Tomcat. If deployed as a SpringBoot application, there are several options for configuration such as using a SpringCloud configuration server or using a local properties file.  More information on externalizing SpringBoot configuration can be found [here](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html).
+The service defines Spring bean Java classes as part of its default configuration.  The default bean configuration is generally fine for most deployments leaving other deployment type decisions such as database connections to be configured in a properties file.  Almost all of the configurable parameters are externalized into a properties file named bootstrap.properties under the `<app home>`/WEB-INF/classes directory if deployed into Tomcat. If deployed as a SpringBoot application, there are several options for configuration such as using a SpringCloud configuration server or using a local properties file.  More information on externalizing SpringBoot configuration can be found [here](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html).
 
 The next sections break down the different configuration parameters in the bootstrap.properties file.
 

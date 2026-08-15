@@ -1,3 +1,7 @@
+---
+title: Message Monitor Architecture
+---
+
 # Message Monitor Architecture
 
 As stated in the overview, several patterns exist to address common integration problems that arise with enterprise application architecture. These design patterns have been grouped in a category called enterprise integration patterns, or EIP. The first definitive EIP [book](http://www.eaipatterns.com/) describes over 60 integration patterns and problem sets addressed by each. [Apache Camel](http://camel.apache.org/) is an open source set of Java libraries that implements all 60+ patterns, plus a vast number of ever increasing converters and end point connectors.

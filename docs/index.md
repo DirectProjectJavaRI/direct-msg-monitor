@@ -12,4 +12,4 @@ This document describes the Direct Project message monitor service for timely an
 
 * [Overview](overview) - This section describes the purpose of the monitoring service and how it fits with the rest of the timely and reliable delivery implementation.
 * [Development Guide](dev-guide) - This section describes the architecture and components of the monitoring service and how to develop your own custom components.
-* [Deployment Guide](dep-guide) - This section describes the deployment model of the messaging service, and how it can be customized with stock properties or using your own custom components.
+* [Deployment Guide](dep-guide) - This section describes the two deployment models for the monitoring service — the cloud native micro-service model, which is the model supported going forward, and the legacy war deployment — along with the full configuration reference and considerations for scaling the service.

@@ -4,29 +4,38 @@ title: Deployment Considerations
 
 # Deployment Considerations
 
-The default deployment makes some assumptions about the deployment model. It assumes a single instance of the monitoring service running a local derby database. For a scalable and highly available service, configuration of a separated RDBMS is necessary. By default, the service supports PostgreSQL, MySQL, and Oracle.  The following sections outline some considerations for moving to scalable and highly available deployment model.
+The shipped defaults describe a single instance on a developer machine, not a service you would put in front of real traffic. The sections below cover what has to change to run the monitor scaled out and highly available. They apply to both deployment models, though the cloud native model is the one built to scale horizontally.
+
+## Database
+
+Every piece of state the monitor holds — active aggregations, delivered-notification history, pending generated DSNs — lives in its database. That makes the database the single thing you must get right before anything else.
+
+The cloud native jar ships with **no datasource configured**, which leaves Spring Boot to fall back to an embedded in-memory database. Everything in flight is lost on restart. The legacy war defaults to a local Derby instance, which is file based and admits only one process at a time, so it rules out running a second instance at all.
+
+Configure a real shared RDBMS. MySQL and PostgreSQL drivers are bundled in the cloud native jar; the entity mappings generate the schema automatically, so you only need to provision an empty database and a user with DDL privileges on it. See [Database and Schema](cloud-native-deployment#database-and-schema).
 
 ## Aggregator State
 
-By nature, aggregators are stateful. The default Camel aggregator uses an in memory model to hold state which means it is not readily scalable across multiple instances of the service. It may be necessary to write a custom aggregator state module that persists and obtains state from a centralized database. Camel provides interfaces to enable this type state persistence, but still requires custom code to be written the properly support distributed state.
+Aggregators are stateful by nature, and Camel's default aggregator holds that state in memory — which would make the service impossible to scale past one instance.
 
-As of direct-msg-monitor-1.1, a distributable and stateful implementation of the aggregator repository is available. This implementation (org.nhindirect.monitor.aggregator.repository.ConcurrentJPAAggregationRepository) is aware of concurrency and consistency issues related to updating aggregation exchanges across multiple threads, JVMs, and even nodes across an cluster. In the event of a concurrency issue, the default applicationContext.xml configuration uses the onException camel construct to reload the aggregation exchange from its latest state and attempt the aggregation and completion condition logic again. For failed exchange recovery, the repository implements a time based lock that ensures only one service instance attempts to recover the failed exchange. The default lock time is two minutes, but can be tweaked using the 'monitor.aggregatorRepository.recoveryLockInterval' property.
+The monitor does not use it. Since `direct-msg-monitor-1.1` it ships `org.nhindirect.monitor.aggregator.repository.ConcurrentJPAAggregationRepository`, an aggregation repository that keeps state in the shared database and is aware of the concurrency and consistency problems of updating an aggregation exchange from multiple threads, JVMs, and cluster nodes at once. When two instances collide on the same exchange, the route's `onException` handler reloads the exchange from its latest persisted state and re-runs the aggregation and completion logic.
 
-## Duplication State Store
+For failed exchange recovery the repository takes a time-based lock so that only one instance attempts to recover a given exchange. The lock lasts two minutes by default; tune it with `monitor.aggregatorRepository.recoveryLockInterval`. Set it long enough to cover a recovery attempt's realistic worst case — too short and two instances can both take a run at the same exchange.
 
-The default deployment uses the Derby embedded database. This database is file based and only allows a single process to access the database at any time. A true RDBMS such as MySQL, Oracle, or PostgreSQL is necessary for running multiple instances. Fortunately, this only requires the bootstrap.properties file to be modified with the proper driver class and JDBC URL (or whatever externalized configuration you are using if running as a SpringBoot application).
+Once the database is shared, running multiple instances is a matter of starting more of them.
 
-The following is the default configuration used for connecting to the local derby database:
+## Retry Dead Letter Destination
 
-```
-spring.datasource.url=jdbc:derby:msgmonitor;create=true
-spring.datasource.username=nhind
-spring.datasource.password=nhind
-```
+When a generated DSN cannot be handed off — to the broker or to the SMTP gateway, depending on which sender is configured — the aggregation is retried and eventually dead-lettered. The default destination is a local file containing a `toString()` representation of the collection of `Tx` objects in the aggregation.
 
-You can make configuration changes using property setting found [here](https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html) in the SpringBoot documentation.
+Two things to weigh here. The representation is a debugging aid, not a machine-readable record, so if you want alerting or reporting on dropped notifications you will need a different format. And a local file is per-instance state: on a scaled-out or containerized deployment each replica writes its own, and on an ephemeral filesystem those disappear with the container. Point `direct.msgmonitor.recovery.deadLetterUri` at something durable and shared — Camel accepts any endpoint URI, so a queue is a reasonable choice.
 
-## Retry Dead Letter URL
+## Broker
 
-The default deployment writes out string representation of the aggregated message is the DSN message cannot be sent to the gateway URL. A system that requires reporting or more sophisticated reply may need to change the representation of the messages or the URL of the dead letter queue.
+**Cloud native only.** The monitor's outbound path depends on the message broker being available, and the shipped configuration disables the RabbitMQ health indicator, so a broker outage does not show up in the service's health status. Monitor the broker separately, or enable `management.health.rabbit.enabled` and let broker connectivity gate the instance's health — but be deliberate about that choice, since it means a broker blip can take every instance out of rotation at once.
 
+If you activate the `streams` profile for broker-based ingest, the consumer's concurrency and retry settings become part of your capacity planning. See [Stream Bindings](dep-and-config#stream-bindings).
+
+## Timeout Tuning
+
+Both aggregation timeouts default to one hour. That value is also written into the default text of `direct.msgmonitor.dsnGenerator.failedRecipientsTitle` ("We have not received a delivery notification in 1 hour…"), so if you change a timeout, change that message to match — otherwise your senders get a failure notification that misstates how long the monitor actually waited.

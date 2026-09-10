@@ -70,7 +70,7 @@ The monitor is a standard Spring Boot application:
 java -jar direct-msg-monitor-sboot-9.0.0.jar
 ```
 
-For anything other than a quick trial, wrap the launch in a start/stop script rather than backgrounding `java -jar` by hand. The BareMetal Assembly Project publishes generic `service.sh` and `service.ps1` templates plus a `logback.xml` that work for every micro-service including this one — see [Launch Microservices](/docs/direct-project-stock/cloud-native-deployment#launch-microservices). Copy the template into the `message-monitor` directory and substitute the jar name for the `<binary>` placeholder.
+For anything other than a quick trial, wrap the launch in a start/stop script rather than backgrounding `java -jar` by hand. The BareMetal Assembly Project publishes generic `service.sh` and `service.ps1` templates plus a `logback.xml` that work for every micro-service including this one — see [Launch Microservices](/docs/direct-project-stock/cloud-native-machine-deployment#launch-microservices). Copy the template into the `message-monitor` directory and substitute the jar name for the `<binary>` placeholder.
 
 The service listens on HTTP port `8081` by default. Override with `server.port`.
 
